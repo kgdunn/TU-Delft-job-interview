@@ -11,21 +11,25 @@ class Image
 {
 private:
     int rows_, cols_, layers_, length_;
-    unsigned char *src;
-    string filename;
+    unsigned char *src_;
 public:
+    string filename;
     bool is_complex;
     
     // Three different constructor options
     Image();
-    Image(const string & filename);
     Image(int rows, int cols, int layers, bool is_complex = false);
+    Image(const Image &);
+    Image(const string & filename);         // Copy constructor
+    //Image& operator=(const Image& input);   // Assignment operator
     ~Image();
   
     // Public member functions
-    //float& get_pixel(int i, int j) { return src[cols_*j + i]; }
     int width() { return cols_; }
     int height() { return rows_; }
+    int layers() { return layers_; }
+    int length() { return length_; }
+    unsigned char* start() {return src_;}
     void offset_then_scale(float offset, float scale);
     
 //    template<typename TPixel> void SetImage(TPixel* srcImage, uint srcpitch);

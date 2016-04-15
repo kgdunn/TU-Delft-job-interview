@@ -66,10 +66,10 @@
 			children = (
 				6CFE15A81CC1287200D2391D /* main.cpp */,
 				6CFE15AF1CC129DD00D2391D /* flotation.h */,
+				6CFE15B01CC13B9500D2391D /* flotation.cpp */,
 				6CFE15B31CC1560700D2391D /* bitmap_image.hpp */,
 				6CFE15B41CC1560700D2391D /* bitmap_test.cpp */,
 				6CFE15B21CC13C3600D2391D /* todo.txt */,
-				6CFE15B01CC13B9500D2391D /* flotation.cpp */,
 			);
 			path = delftdemo;
 			sourceTree = "<group>";
@@ -253,6 +253,7 @@
 				6CFE15AE1CC1287200D2391D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

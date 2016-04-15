@@ -10,8 +10,6 @@ int main() {
     string directory = "/Users/kevindunn/Delft/demo/gui/source/";
     string parameters_file = "model-parameters.xml";
     
-    Image raw_image_nD;
-    Image image_nD_sub;
     Image image_1D;
     Image image_complex;
     Image wavelet_image;
@@ -25,8 +23,10 @@ int main() {
     string dummy_filename = "/Users/kevindunn/Delft/DelftDemo/delftdemo/delftdemo/testing-image.bmp";
     
     // The start of the image processing pipeline:
-    raw_image_nD = read_image(dummy_filename);
-    image_nD_sub = subsample_image(raw_image_nD);
+    Image raw_image_nD = read_image(dummy_filename);
+    
+    Image image_nD_sub = subsample_image(raw_image_nD);
+    
     image_1D = colour2gray(image_nD_sub);
     image_complex = fft2_image(image_1D);
     wavelet_image = gauss_cwt(image_complex, coefficients);
