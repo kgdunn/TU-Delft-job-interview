@@ -22,7 +22,7 @@ int main() {
     param coefficients = load_model_parameters(directory, parameters_file);
     
     //for-loop here
-    string dummy_filename = "abc.bmp";
+    string dummy_filename = "/Users/kevindunn/Delft/DelftDemo/delftdemo/delftdemo/testing-image.bmp";
     
     // The start of the image processing pipeline:
     raw_image_nD = read_image(dummy_filename);

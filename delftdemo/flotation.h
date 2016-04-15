@@ -10,8 +10,8 @@ struct param{};
 class Image
 {
 private:
-    int rows_, cols_, layers_;
-    float *src;
+    int rows_, cols_, layers_, length_;
+    unsigned char *src;
     string filename;
 public:
     bool is_complex;
@@ -23,7 +23,7 @@ public:
     ~Image();
   
     // Public member functions
-    float& get_pixel(int i, int j) { return src[cols_*j + i]; }
+    //float& get_pixel(int i, int j) { return src[cols_*j + i]; }
     int width() { return cols_; }
     int height() { return rows_; }
     void offset_then_scale(float offset, float scale);
@@ -36,14 +36,6 @@ public:
     
 //    vector2f ComputeMeanAndCOM(float bgcorrection=0.0f);
 //    void ComputeRadialProfile(float* dst, int radialSteps, int angularSteps, float minradius, float maxradius, vector2f center, bool crp, bool* boundaryHit=0, bool normalize=true);
-//    void ComputeQuadrantProfile(scalar_t* dst, int radialSteps, int angularSteps, int quadrant, float minRadius, float maxRadius, vector2f center, float* radialWeights=0);
-//    
-//    float ComputeZ(vector2f center, int angularSteps, int zlutIndex, bool* boundaryHit=0, float* profile=0, float* cmpprof=0, bool normalizeProfile=true)
-//    {
-//        float* prof = profile ? profile : ALLOCA_ARRAY(float, zlut_res);
-//        ComputeRadialProfile(prof,zlut_res,angularSteps, zlut_minradius, zlut_maxradius, center, false, boundaryHit, normalizeProfile);
-//        return LUTProfileCompare(prof, zlutIndex, cmpprof, LUTProfMaxQuadraticFit);
-//    }
     
     //void FourierTransform2D();
     //void FourierRadialProfile(float* dst, int radialSteps, int angularSteps, float minradius, float maxradius);
