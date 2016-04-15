@@ -38,8 +38,8 @@ Image::Image(){
 
 Image::Image(const Image & incoming){
     // Copy constructor: creates a deepcopy
-    rows_ = incoming.cols_;
-    cols_ = incoming.rows_;
+    rows_ = incoming.rows_;
+    cols_ = incoming.cols_;
     layers_ = incoming.layers_;
     length_ = incoming.length_;
     is_complex = incoming.is_complex;
@@ -135,32 +135,52 @@ Image subsample_image(Image inImg){
     int height = static_cast<int>(floor(inH / 2.0));
     int layers = inImg.layers();
     Image output(height, width, layers, false);
+    output.filename = inImg.filename + "--subsampled";
     
     unsigned char * inI = inImg.start();
     unsigned char * outI = output.start();
-    int idx = 0;
+    std::size_t idx = 0;
     
-    for (std::size_t i=0; i<inW; i+=2){
-        for (std::size_t j=0; j<inH; j+=2){
+    for (std::size_t j=0; j<inH; j+=2){
+        for (std::size_t i=0; i<inW; i+=2){
             for (std::size_t k=0; k < layers; k++){
                 outI[idx++] = inI[j*inW*layers+i*layers+k];
-                //cout << static_cast<int>(outI[idx-1]);//(inI[j*inW*layers+i*layers+k]) << endl;;
+                //cout << static_cast<int>(inI[j*inW*layers+i*layers+k]) << endl;
+                //cout << static_cast<int>(outI[idx-1]) << endl;
             }
         }
     }
-//    idx = 0;
-//    for (std::size_t i=0; i<width; i++){
-//        for (std::size_t j=0; j<height; j++){
-//            for (std::size_t k=0; k < layers; k++){
-//                cout << static_cast<int>(outI[idx++]) << endl;
-//            }
-//        }
-//    }
     return output;
 };
 
 Image colour2gray(Image inImg){
-    Image output;
+    // Convert a 3-channel BRG image to a grayscale image.
+    int width = inImg.width();
+    int height = inImg.height();
+    int layers = 1;
+    Image output(height, width, layers, false);
+    output.filename = inImg.filename + "--grayscaled";
+    unsigned char * outI = output.start();
+    unsigned char * inI = inImg.start();
+    
+    if (inImg.layers()==3){
+        // This is a common weighted sum for colour -> gray, since the human
+        // eye is more attuned to green colour (higher prevalence of green cones).
+        double bmul = 0.114020;
+        double gmul = 0.587043;
+        double rmul = 0.298936;
+        std::size_t m_src = 0x00;
+        std::size_t m_dst = 0x00;
+        for (std::size_t j=0; j<height; j++){
+            for (std::size_t i=0; i<width; i++){
+                outI[m_dst++] = inI[m_src+0]*bmul +
+                                inI[m_src+1]*gmul +
+                                inI[m_src+2]*rmul;
+                m_src += 3;
+                //cout << static_cast<int>(outI[m_dst-1]) << endl;
+            }
+        }
+    }
     return output;
 };
 
