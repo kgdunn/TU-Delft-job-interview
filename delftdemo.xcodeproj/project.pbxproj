@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		6CFE15A91CC1287200D2391D /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6CFE15A81CC1287200D2391D /* main.cpp */; };
+		6CFE15B11CC13B9500D2391D /* flotation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6CFE15B01CC13B9500D2391D /* flotation.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -25,6 +26,9 @@
 /* Begin PBXFileReference section */
 		6CFE15A51CC1287200D2391D /* delftdemo */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = delftdemo; sourceTree = BUILT_PRODUCTS_DIR; };
 		6CFE15A81CC1287200D2391D /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		6CFE15AF1CC129DD00D2391D /* flotation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = flotation.h; sourceTree = "<group>"; };
+		6CFE15B01CC13B9500D2391D /* flotation.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = flotation.cpp; sourceTree = "<group>"; };
+		6CFE15B21CC13C3600D2391D /* todo.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = todo.txt; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,6 +62,9 @@
 			isa = PBXGroup;
 			children = (
 				6CFE15A81CC1287200D2391D /* main.cpp */,
+				6CFE15AF1CC129DD00D2391D /* flotation.h */,
+				6CFE15B21CC13C3600D2391D /* todo.txt */,
+				6CFE15B01CC13B9500D2391D /* flotation.cpp */,
 			);
 			path = delftdemo;
 			sourceTree = "<group>";
@@ -118,6 +125,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6CFE15B11CC13B9500D2391D /* flotation.cpp in Sources */,
 				6CFE15A91CC1287200D2391D /* main.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
