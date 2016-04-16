@@ -273,7 +273,53 @@ Image ifft2_complex_image(fftw_complex* inImg, int height, int width, bool keep_
     return output;
 };
 
-Image gauss_cwt(Image inImg, param model){
+
+
+Image gauss_cwt(fftw_complex* inFFT, double scale, double sigma,
+                int height, int width){
+    // Performs the Gaussian Continuous Wavelet Transformation, given the FFT2
+    // transform of the image, ``inImg``
+    
+    // 1. Get pointers to the required parts of the complex input image. R x C
+    //Areal = mxGetPr(prhs[1]);
+    //Aimag = mxGetPi(prhs[1]);
+    
+    // 3. Set up variables required for the calculations
+    //int n_elements = height * width;
+
+    // 2. Set up the output image
+    double *B = new double [height * width];
+    
+    // 3. Intermediate storage required
+    //double *temp_real = new double[height * width];
+    //double *temp_imag = new double[height * width];
+    //tempOutPtr  = mxCreateDoubleMatrix(nRows,nCols,mxCOMPLEX);                 // used for intermediate calculations
+    
+    // Create the height and width pulses
+    
+    double *h_pulse = new double[height];
+    double *w_pulse = new double[width];
+    double multiplier_h = 2*3.141592653589/height;
+    
+    int split = static_cast<int>(floor(height/2));
+    for(int k=0; k<split; k++){
+        h_pulse[k] = scale * k * multiplier_h;
+        h_pulse[k+split] = - scale * multiplier_h * (split-k);
+        cout << k << "\t" << h_pulse[k] << "\t" << h_pulse[k+split] << endl;
+    }
+    double multiplier_w = 2*3.141592653589/width;
+    split = width/2;
+    for(int k=0; k<split; k++){
+        w_pulse[k] = scale * k * multiplier_w;
+        w_pulse[k+split] = - scale * multiplier_w * (split-k);
+        cout << k << "\t" << w_pulse[k] << "\t" << w_pulse[k+split] << endl;
+    }
+    
+    
+    delete[] B;
+    delete[] h_pulse;
+    delete[] w_pulse;
+  
     Image output;
     return output;
 };

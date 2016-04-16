@@ -6,6 +6,8 @@ Add operator= function to the Image class
 Template the Image class, to allow float and int
 Make the subsmapling the happen in real
 
+Function that callss Gauss and Threshold repeatedly
+
 
 Use const where you can.
 
