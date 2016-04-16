@@ -228,14 +228,48 @@ fftw_complex* fft2_image(Image inImg){
     
     // N. Clean up temporary storage
     delete[] inFFT;
-    fftw_destroy_plan (plan_forward);
+    fftw_destroy_plan(plan_forward);
     
     //Image output;
     return outFFT;
 };
 
-Image iff2_image(Image inImg){
-    Image output;
+Image ifft2_complex_image(fftw_complex* inImg, int height, int width, bool keep_input){
+    // Recreates an image from the complex inputs by using the inverse fast
+    // Fourier transform.
+    //
+    // You must also specify the recreated image dimensions: height (rows) and
+    // width (columns). Note that the inImg stores in row-major order an FFT
+    // that is as many rows as the original, but roughly half the number of
+    // columns. But no consistency checking is done (yet) to ensure you have
+    // specified a sane ``height`` and ``width``.
+    
+    // It has the side effect of destroying "inImg", unless you request not to
+    // with the ``keep_input`` flag.
+
+    double * outIm = new double[height * width];
+    fftw_plan plan_backward = fftw_plan_dft_c2r_2d(height, width,
+                                                inImg, outIm, FFTW_ESTIMATE);
+    fftw_execute(plan_backward);
+    
+    // Copy the result from FFTW to our image storage array
+    Image output(height, width, 1, false);
+    //std::size_t idx = 0x00;
+    
+    // TODO: copy the data over, in float form to a different array structure.
+    for (std::size_t i = 0; i < height; i++ ){
+        for (std::size_t j = 0; j < width; j++ ){
+            //cout << "\t" << i << "\t" << j << "\t"
+            //     << outIm[i*width+j] / (double) (height*width) << endl;
+        }
+    }
+    
+    // Clean up temporary storage.
+    fftw_destroy_plan(plan_backward);
+    delete[] outIm;
+    if (!keep_input){
+        fftw_free(inImg);
+    }
     return output;
 };
 

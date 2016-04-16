@@ -47,7 +47,7 @@ Image read_image(std::string filename);
 Image subsample_image(Image inImg);
 Image colour2gray(Image inImg);
 fftw_complex* fft2_image(Image inImg);
-Image iff2_image(Image inImg);
+Image ifft2_complex_image(fftw_complex* inImg, int height, int width, bool keep_input=false);
 Image gauss_cwt(Image inImg, param model);
 Image multiply_scalar(Image inImg, double scalar);
 std::vector<double> threshold(Image inImg, param model);

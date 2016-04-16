@@ -22,6 +22,9 @@ int main() {
     Image image_nD_sub  = subsample_image(raw_image_nD);
     Image image_1D      = colour2gray(image_nD_sub);
     fftw_complex *image_complex = fft2_image(image_1D);
+    Image restored = ifft2_complex_image(image_complex,
+                                         image_1D.height(),
+                                         image_1D.width());
     //Image wavelet_image = gauss_cwt(image_complex, coefficients);
     //vector<double> f1f2 = threshold(wavelet_image, coefficients);
     //features <- f1f2

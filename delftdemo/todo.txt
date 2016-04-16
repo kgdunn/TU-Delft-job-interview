@@ -7,5 +7,6 @@ Template the Image class, to allow float and int
 Make the subsmapling the happen in real
 
 
+Use const where you can.
 
 Time function: start to end. How to check that accurately?
