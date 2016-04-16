@@ -296,25 +296,42 @@ Image gauss_cwt(fftw_complex* inFFT, double scale, double sigma,
     //tempOutPtr  = mxCreateDoubleMatrix(nRows,nCols,mxCOMPLEX);                 // used for intermediate calculations
     
     // Create the height and width pulses
-    
     double *h_pulse = new double[height];
-    double *w_pulse = new double[width];
     double multiplier_h = 2*3.141592653589/height;
-    
     int split = static_cast<int>(floor(height/2));
     for(int k=0; k<split; k++){
-        h_pulse[k] = scale * k * multiplier_h;
-        h_pulse[k+split] = - scale * multiplier_h * (split-k);
-        cout << k << "\t" << h_pulse[k] << "\t" << h_pulse[k+split] << endl;
+        h_pulse[k] = pow(scale * k * multiplier_h, 2);
+        h_pulse[k+split] = pow(- scale * multiplier_h * (split-k), 2);
+        //cout << k << "\t" << h_pulse[k] << "\t" << h_pulse[k+split] << endl;
     }
+    
+    double *w_pulse = new double[width];
     double multiplier_w = 2*3.141592653589/width;
     split = width/2;
     for(int k=0; k<split; k++){
-        w_pulse[k] = scale * k * multiplier_w;
-        w_pulse[k+split] = - scale * multiplier_w * (split-k);
-        cout << k << "\t" << w_pulse[k] << "\t" << w_pulse[k+split] << endl;
+        w_pulse[k] = pow(scale * k * multiplier_w, 2);
+        w_pulse[k+split] = pow(-scale * multiplier_w * (split-k), 2);
+        //cout << k << "\t" << w_pulse[k] << "\t" << w_pulse[k+split] << endl;
     }
     
+    // Starting the computations for the Gaussian. Set up storage for the
+    // FFTW structure. Note (again) that the column dimension is half the
+    // image width, plus 1 column padding. So when we do the convolution below,
+    // we are doing it with the knowledge of the symmetry.
+    std::size_t halfwidth = (width / 2) + 1;
+    std::size_t fft_size = sizeof(fftw_complex)* height * halfwidth;
+    fftw_complex *outFFT = (fftw_complex*)fftw_malloc (fft_size);
+
+    double neg_sigma_sq = -1*pow(sigma, 2.0) / 2.0	;
+    double multiplier = 0.0;
+
+    for(std::size_t k=0; k< height; k++){
+        for(std::size_t j=0;j< halfwidth; j++){
+            multiplier = exp( neg_sigma_sq * (w_pulse[j] + h_pulse[k]) );
+            //tempReal[k+j*nRows] = Areal[k+j*nRows] * multiplier;  // multiply by A while we are here (we need to do it
+            //tempImag[k+j*nRows] = Aimag[k+j*nRows] * multiplier;    //   in the next step anyway)
+        }
+    }
     
     delete[] B;
     delete[] h_pulse;
