@@ -5,6 +5,8 @@
 #include <string>
 using namespace std;
 
+#include <fftw3.h>
+
 struct param{};
 
 class Image
@@ -44,7 +46,7 @@ param load_model_parameters(std::string directory, std::string filename);
 Image read_image(std::string filename);
 Image subsample_image(Image inImg);
 Image colour2gray(Image inImg);
-Image fft2_image(Image inImg);
+fftw_complex* fft2_image(Image inImg);
 Image iff2_image(Image inImg);
 Image gauss_cwt(Image inImg, param model);
 Image multiply_scalar(Image inImg, double scalar);

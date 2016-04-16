@@ -191,13 +191,13 @@ Image colour2gray(Image inImg){
     return output;
 };
 
-Image fft2_image(Image inImg){
+fftw_complex* fft2_image(Image inImg){
     // Performs the forward fast Fourier transform of a 2D matrix on the input
     // image, inImg.
     // 1. Convert input image to floats, allocating the right size array
     // 2. Create the output storage to receive the FFT result. Use the FFTW
     //    storage types.
-    // N. Clean up the temporary input floating array
+    // N. Clean up the temporary input floating array, and the FFT plan.
     
     // 1. Note that FFTW stores the image data in row major order
     double *inFFT = new double[inImg.height()*inImg.width()];
@@ -206,32 +206,32 @@ Image fft2_image(Image inImg){
     for (std::size_t i = 0; i < inImg.height(); i++){ // rows
         for (std::size_t    j = 0; j < inImg.width(); j++){ //col
             inFFT[i*inImg.width()+j] = static_cast<double>(start_pixel[idx++]);
-            cout << inFFT[i*inImg.width()+j] << endl;
+            //cout << inFFT[i*inImg.width()+j] << endl;
         }
     }
     
     // 2. Set up the outputs
     std::size_t halfwidth = (inImg.width() / 2) + 1;
-    fftw_complex *outFFT = (fftw_complex*)fftw_malloc (sizeof(fftw_complex)*inImg.height()*halfwidth);
+    std::size_t fft_size = sizeof(fftw_complex)*inImg.height()*halfwidth;
+    fftw_complex *outFFT = (fftw_complex*)fftw_malloc (fft_size);
     
     fftw_plan plan_forward = fftw_plan_dft_r2c_2d (inImg.height(),
                                                    inImg.width(),
                                                    inFFT, outFFT, FFTW_ESTIMATE);
-    fftw_execute ( plan_forward );
-    
-    
-    for (std::size_t i = 0; i < inImg.height(); i++){
-        for (std::size_t j = 0; j < halfwidth; j++){
-            printf ( "  %4d  %4d  %12f  %12f\n",
-                    i, j, outFFT[i*halfwidth+j][0], outFFT[i*halfwidth+j][1] );
-        }
-    }
+    fftw_execute (plan_forward);
+    //for (std::size_t i = 0; i < inImg.height(); i++){
+    //    for (std::size_t j = 0; j < halfwidth; j++){
+    //        cout << "\t" << i << "\t" << j << "\t" << outFFT[i*halfwidth+j][0]
+    //             << "\t" << outFFT[i*halfwidth+j][1] << endl;
+    //    }
+    //}
     
     // N. Clean up temporary storage
     delete[] inFFT;
+    fftw_destroy_plan (plan_forward);
     
-    Image output;
-    return output;
+    //Image output;
+    return outFFT;
 };
 
 Image iff2_image(Image inImg){
