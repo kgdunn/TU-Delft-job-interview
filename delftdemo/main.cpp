@@ -15,7 +15,8 @@ int main() {
     //for-loop here
     string dummy_filename = "/Users/kevindunn/Delft/DelftDemo/delftdemo/delftdemo/testing-image.bmp";
     
-    // The start of the image processing pipeline:
+    
+    // The image processing pipeline:
     Image raw_image_nD  = read_image(dummy_filename);
     Image image_nD_sub  = subsample_image(raw_image_nD);
     Image image_1D      = colour2gray(image_nD_sub);

@@ -25,22 +25,13 @@ public:
     ~Image();
   
     // Public member functions
-    int width() { return cols_; }
-    int height() { return rows_; }
-    int layers() { return layers_; }
-    int length() { return length_; }
-    unsigned char* start() {return src_;}
+    inline int width() { return cols_; }
+    inline int height() { return rows_; }
+    inline int layers() { return layers_; }
+    inline int length() { return length_; }
+    inline unsigned char* start() {return src_;}
     void offset_then_scale(float offset, float scale);
-    
-//    template<typename TPixel> void SetImage(TPixel* srcImage, uint srcpitch);
-//    void SetImage16Bit(ushort* srcImage, uint srcpitch) { SetImage(srcImage, srcpitch); }
-//    void SetImage8Bit(uchar* srcImage, uint srcpitch) { SetImage(srcImage, srcpitch); }
-//    void SetImageFloat(float* srcImage);
-//    void SaveImage(const char *filename);
-    
-//    vector2f ComputeMeanAndCOM(float bgcorrection=0.0f);
-//    void ComputeRadialProfile(float* dst, int radialSteps, int angularSteps, float minradius, float maxradius, vector2f center, bool crp, bool* boundaryHit=0, bool normalize=true);
-    
+
     //void FourierTransform2D();
     //void FourierRadialProfile(float* dst, int radialSteps, int angularSteps, float minradius, float maxradius);
     

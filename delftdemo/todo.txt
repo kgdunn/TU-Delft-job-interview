@@ -2,3 +2,10 @@ CPUTracker::Gauss2DResult CPUTracker::Compute2DGaussianMLE(vector2f initial, int
 
 
 Add operator= function to the Image class
+
+Template the Image class, to allow float and int
+Make the subsmapling the happen in real
+
+
+
+Time function: start to end. How to check that accurately?

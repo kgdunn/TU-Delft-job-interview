@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		6CFE15A91CC1287200D2391D /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6CFE15A81CC1287200D2391D /* main.cpp */; };
 		6CFE15B11CC13B9500D2391D /* flotation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6CFE15B01CC13B9500D2391D /* flotation.cpp */; };
-		6CFE15B51CC1560700D2391D /* bitmap_test.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6CFE15B41CC1560700D2391D /* bitmap_test.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -31,7 +30,6 @@
 		6CFE15B01CC13B9500D2391D /* flotation.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = flotation.cpp; sourceTree = "<group>"; };
 		6CFE15B21CC13C3600D2391D /* todo.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = todo.txt; sourceTree = "<group>"; };
 		6CFE15B31CC1560700D2391D /* bitmap_image.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = bitmap_image.hpp; sourceTree = "<group>"; };
-		6CFE15B41CC1560700D2391D /* bitmap_test.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = bitmap_test.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -68,7 +66,6 @@
 				6CFE15AF1CC129DD00D2391D /* flotation.h */,
 				6CFE15B01CC13B9500D2391D /* flotation.cpp */,
 				6CFE15B31CC1560700D2391D /* bitmap_image.hpp */,
-				6CFE15B41CC1560700D2391D /* bitmap_test.cpp */,
 				6CFE15B21CC13C3600D2391D /* todo.txt */,
 			);
 			path = delftdemo;
@@ -131,7 +128,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				6CFE15B11CC13B9500D2391D /* flotation.cpp in Sources */,
-				6CFE15B51CC1560700D2391D /* bitmap_test.cpp in Sources */,
 				6CFE15A91CC1287200D2391D /* main.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -223,6 +219,12 @@
 		6CFE15AD1CC1287200D2391D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				HEADER_SEARCH_PATHS = /usr/local/include;
+				LIBRARY_SEARCH_PATHS = /usr/local/lib;
+				OTHER_LDFLAGS = (
+					"-lfftw3",
+					"-lm",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -230,6 +232,12 @@
 		6CFE15AE1CC1287200D2391D /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				HEADER_SEARCH_PATHS = /usr/local/include;
+				LIBRARY_SEARCH_PATHS = /usr/local/lib;
+				OTHER_LDFLAGS = (
+					"-lfftw3",
+					"-lm",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;

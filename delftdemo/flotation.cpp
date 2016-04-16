@@ -5,8 +5,15 @@
 #include <algorithm>
 #include <vector>
 #include <cmath>
-#include "flotation.h"
+
+// 3rd party libraries. You     make install (installs the library to /usr/local/include)
+#include <fftw3.h> // make install this, and add the appropriate locations to
+                   // to both the Header and the Library search paths.
+                   // Linker flags required: "-lfftw3 -lm"
 #include "bitmap_image.hpp"
+
+// Our libraries
+#include "flotation.h"
 
 param load_model_parameters(std::string directory,
                             std::string filename){
@@ -185,6 +192,44 @@ Image colour2gray(Image inImg){
 };
 
 Image fft2_image(Image inImg){
+    // Performs the forward fast Fourier transform of a 2D matrix on the input
+    // image, inImg.
+    // 1. Convert input image to floats, allocating the right size array
+    // 2. Create the output storage to receive the FFT result. Use the FFTW
+    //    storage types.
+    // N. Clean up the temporary input floating array
+    
+    // 1. Note that FFTW stores the image data in row major order
+    double *inFFT = new double[inImg.height()*inImg.width()];
+    unsigned char * start_pixel = inImg.start();
+    std::size_t idx = 0x00;
+    for (std::size_t i = 0; i < inImg.height(); i++){ // rows
+        for (std::size_t    j = 0; j < inImg.width(); j++){ //col
+            inFFT[i*inImg.width()+j] = static_cast<double>(start_pixel[idx++]);
+            cout << inFFT[i*inImg.width()+j] << endl;
+        }
+    }
+    
+    // 2. Set up the outputs
+    std::size_t halfwidth = (inImg.width() / 2) + 1;
+    fftw_complex *outFFT = (fftw_complex*)fftw_malloc (sizeof(fftw_complex)*inImg.height()*halfwidth);
+    
+    fftw_plan plan_forward = fftw_plan_dft_r2c_2d (inImg.height(),
+                                                   inImg.width(),
+                                                   inFFT, outFFT, FFTW_ESTIMATE);
+    fftw_execute ( plan_forward );
+    
+    
+    for (std::size_t i = 0; i < inImg.height(); i++){
+        for (std::size_t j = 0; j < halfwidth; j++){
+            printf ( "  %4d  %4d  %12f  %12f\n",
+                    i, j, outFFT[i*halfwidth+j][0], outFFT[i*halfwidth+j][1] );
+        }
+    }
+    
+    // N. Clean up temporary storage
+    delete[] inFFT;
+    
     Image output;
     return output;
 };
