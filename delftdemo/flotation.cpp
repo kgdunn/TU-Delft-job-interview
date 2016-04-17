@@ -247,9 +247,13 @@ MatrixRM ifft2_cImage_to_matrix(fftw_complex* inImg, int height, int width){
     // that is as many rows as the original, but roughly half the number of
     // columns. But no consistency checking is done (yet) to ensure you have
     // specified a sane ``height`` and ``width``.
+    //
+    // Note: the stored result is passed through the absolute value function,
+    // since that step is required next. It can be done here efficiently.
 
 
     double * outIm = new double[height * width];
+    double n_elements = height*width;
     fftw_plan plan_backward = fftw_plan_dft_c2r_2d(height, width,
                                                 inImg, outIm, FFTW_ESTIMATE);
     fftw_execute(plan_backward);
@@ -261,7 +265,7 @@ MatrixRM ifft2_cImage_to_matrix(fftw_complex* inImg, int height, int width){
     outputI.resize(height, width);
     for (std::size_t i = 0; i < height; i++ ){
         for (std::size_t j = 0; j < width; j++ ){
-            *(outputI.data() + i*width+j) = outIm[i*width+j] / (double) (height*width);
+            *(outputI.data() + i*width+j) = std::abs(outIm[i*width+j] / n_elements);
             //cout << "\t" << i << "\t" << j << "\t"
             //     << outIm[i*width+j] / (double) (height*width) << endl;
         }
@@ -327,14 +331,115 @@ fftw_complex* gauss_cwt(fftw_complex* inFFT, double scale, double sigma,
     return outFFT;
 };
 
-Image multiply_scalar(Image inImg, double scalar){
-    // Utility function: multiply each entry in the image by a scalar value.
-    Image output;
-    return output;
-};
+double norm_threshold(const float *X, long n_elements, int apply_thresh, double thresh=0.0){
+    // Using the ``n_elements`` in contiguous matrix (or vector) ``X``, it
+    // calculates the sum-of-squares of the elements. Or, if ``apply_thresh``
+    // ``thresh`` are provided, it will only do this on elements in X (not X^2)
+    // that exceed that given ``thresh`` value.
+    //
+    // MATLAB: normvalue = sum(sum( ((A>=thresh).*A).^2 ));  % for matrix A
 
-std::vector<double> threshold(Image inImg, param model){
+    double temp = 0.0;
+    if (apply_thresh==1){
+       for (std::size_t k=0; k < n_elements; k++)
+        temp += X[k]*X[k]*(X[k]>=thresh);
+    }
+    else{
+        for (std::size_t k=0; k < n_elements; k++)
+        temp += X[k]*X[k];
+    }
+    return(temp);
+}
+
+std::vector<double> threshold(const MatrixRM inImg, param model){
+    // Thresholds the wavelet coefficients based on retained energ. Calculates
+    // the percentage of pixels that exceeds this energy level.
+    //
+    // Returns: 2-element vector
+    //   1/ The percentage retained coefficients.
+    //   2/ The threshold value computed to retain an energy level.
+    
+    // 0. Abstract this into the model, once debugged
+    double per_retained = 0.85;
+    
+    
+    // 1. Initialize parameters required to determine the thresholding value
+    long n_elements = inImg.rows() * inImg.cols();
+    const float* X = inImg.data();
+    float stdX = 0.0;
+    float sumX = 0.0;
+    float minX = X[0];
+    float maxX = 0.0;
+    float meanX = 0.0;
+    
+    // 2. We need some basic statistics about the image. It is efficient to
+    //    calculate them outside the matrix library, since we use fewer passes
+    //    through the data this way.
+    for (std::size_t k=0; k < n_elements; k++){
+        sumX += X[k];
+        if (minX > X[k])
+            minX = X[k];
+        if (maxX < X[k])
+            maxX = X[k];
+    }
+    meanX = sumX / n_elements;
+    for (std::size_t k=0; k < n_elements; k++){
+        stdX += (X[k] - meanX) * (X[k] - meanX);
+    }
+    stdX = sqrt(stdX / (n_elements - 1));
+    double base_energy = norm_threshold(inImg.data(), n_elements, 0);
+    
+    // 3. Set up search algorithm to find energy level. Uses the Golden section
+    //    search routine (https://en.wikipedia.org/wiki/Golden_section_search)
+    double R = (sqrt(5)-1)/2;  // Golden ratio: 0.61803399
+    double C = 1 - R;
+    double x0, x1, x2, x3, f1, f2;
+    x0 = minX;
+    x3 = maxX;
+    x1 = x0 + C*(x3-x0);
+    x2 = x3 - C*(x3-x0);
+    
+    f1 = std::abs(norm_threshold(X, n_elements,1, x1)/base_energy - per_retained);
+    f2 = std::abs(norm_threshold(X, n_elements,1, x2)/base_energy - per_retained);
+    
+    // 4. Run the search algorithm in a while loop, protecting for the case of
+    //    non-convergence
+    int n_iter = 0;
+    while ((std::abs(x3-x0)/stdX > 0.000001) && (n_iter < 100)){
+        n_iter++;
+        if (f2 < f1){
+            x0 = x1;
+            x1 = x2;
+            x2 = R*x1 + C*x3;
+            f1 = f2;
+            f2 = std::abs(norm_threshold(X, n_elements, 1, x2)/base_energy - per_retained);
+        }
+        else{
+            x3 = x2;
+            x2 = x1;
+            x1 = R*x2 + C*x0;
+            f2 = f1;
+            f1 = std::abs(norm_threshold(X ,n_elements, 1, x1)/base_energy - per_retained);
+        }
+    }
+    if (n_iter > 99){
+        cout << "The maximum number of while loop iterations has been exceeded. " << endl;
+        abort();
+    }else{
+        //cout << "Required " << n_iter << " iterations." << endl;
+    }
+    
+    // Finished. Assign the outputs and return.
     std::vector<double> output(2);
+    if (f1 < f2)
+        output[1] = x1;
+    else
+        output[1] = x2;
+    
+    output[0] = 0.0;
+    for (std::size_t k=0; k < n_elements; k++)
+        output[0] += X[k] > output[1];    // MATLAB: = sum(sum(A >= ThrValue))
+    output[0] = output[0] / static_cast<double>(n_elements);
     return output;
 };
 

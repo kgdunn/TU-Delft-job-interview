@@ -46,8 +46,7 @@ Image colour2gray(Image inImg);
 fftw_complex* fft2_image(Image inImg);
 MatrixRM ifft2_cImage_to_matrix(fftw_complex* inImg, int height, int width);
 fftw_complex* gauss_cwt(fftw_complex* inFFT, double scale, double sigma, int height, int width);
-Image multiply_scalar(Image inImg, double scalar);
-std::vector<double> threshold(Image inImg, param model);
+std::vector<double> threshold(MatrixRM inImg, param model);
 std::vector<double> project_onto_model(std::vector<double> features, param model);
 
 #endif /* flotation_h */
