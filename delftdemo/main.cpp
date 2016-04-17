@@ -9,7 +9,7 @@ using namespace std;
 
 int main() {
     
-    int n_profiles = 10000;
+    int n_profiles = 1000;
     auto begin = std::chrono::high_resolution_clock::now();
     
     for (int k=0; k < n_profiles; k++){

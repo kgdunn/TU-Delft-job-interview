@@ -372,16 +372,12 @@ std::vector<double> threshold(const MatrixRM inImg, param model){
     float maxX = 0.0;
     float meanX = 0.0;
     
-    // 2. We need some basic statistics about the image. It is efficient to
-    //    calculate them outside the matrix library, since we use fewer passes
-    //    through the data this way.
-    for (std::size_t k=0; k < n_elements; k++){
-        sumX += X[k];
-        if (minX > X[k])
-            minX = X[k];
-        if (maxX < X[k])
-            maxX = X[k];
-    }
+    // 2. We need some basic statistics about the image. It is no more efficient
+    //    to calculate them outside the matrix library, than to calculate them
+    //    manually. Rather use the library (cleaner code).
+    minX = inImg.minCoeff();
+    maxX = inImg.maxCoeff();
+    sumX = inImg.sum();
     meanX = sumX / n_elements;
     for (std::size_t k=0; k < n_elements; k++){
         stdX += (X[k] - meanX) * (X[k] - meanX);
