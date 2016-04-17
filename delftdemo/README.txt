@@ -62,6 +62,3 @@ int main( )
 
 	-lboost_system -lboost_filesystem
 	
-	
-	The following directory should be added to compiler include paths: /Users/kevindunn/Delft/library/boost_1_60_0
-	The following directory should be added to linker library paths:   /Users/kevindunn/Delft/library/boost_1_60_0/stage/lib

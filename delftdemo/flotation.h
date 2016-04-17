@@ -5,12 +5,13 @@
 #include <string>
 using namespace std;
 
+// 3rd party libraries. Please see README.txt to see how to install and set up.
 #include <fftw3.h>
-
-// Use Eigen for matrix computations, and typedef alias a shorter name.
+// Use Eigen for matrix computations, and typedef aliased shorter names.
 #include "Eigen/Core"
 typedef Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> MatrixRM;
 typedef Eigen::Matrix<float, 1, Eigen::Dynamic> VectorRM;
+
 
 struct param{
     // A structure that holds the model parameters that are used to process
@@ -31,8 +32,8 @@ struct param{
     MatrixRM loadings;      // n_features x n_components matrix
 };
 
-class Image
-{
+
+class Image{
 private:
     int rows_, cols_, layers_, length_;
     unsigned char *src_;

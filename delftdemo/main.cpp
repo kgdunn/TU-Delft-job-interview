@@ -2,15 +2,12 @@
 #include <string>
 #include <vector>
 
-// 3rd party libraries. You     make install (installs the library to /usr/local/include)
-#include <fftw3.h> // make install this, and add the appropriate locations to
-// to both the Header and the Library search paths.
-// Linker flags required: "-lfftw3 -lm"
+// 3rd party libraries. Please see README.txt to see how to install and set up.
+#include <fftw3.h>
 #include "bitmap_image.hpp"
 #include "Eigen/Core"
 #include "opencv2/core/persistence.hpp"
 #include <boost/filesystem.hpp>
-//#include <boost/regex.hpp>
 
 // Our libraries
 #include "flotation.h"
@@ -23,6 +20,7 @@ int main() {
     
     int n_profiles = 1;
     auto begin = std::chrono::high_resolution_clock::now();
+    std::vector<std::string> all_files;
     
     for (int k=0; k < n_profiles; k++){
         // This outer loop is used for profiling the code and checking for
@@ -33,7 +31,6 @@ int main() {
         string parameters_file = "model-parameters.yml";
         param model = load_model_parameters(directory, parameters_file);
         
-        std::vector<std::string> all_files;
         string filename_extenion_filter = ".bmp";
         try{
             if (exists(directory) && is_directory(directory)){
@@ -50,7 +47,7 @@ int main() {
         //string filename = "/Users/kevindunn/Delft/DelftDemo/delftdemo/delftdemo/testing-image.bmp";
         for (auto filename : all_files){
             // The image processing pipeline:
-            Image raw_image_nD  = read_image(filename);
+            Image raw_image_nD  = read_image((directory+filename).c_str());
             Image image_nD_sub  = subsample_image(raw_image_nD);
             Image image_1D      = colour2gray(image_nD_sub);
             fftw_complex *image_complex = fft2_image(image_1D);
@@ -76,8 +73,7 @@ int main() {
         
     }
     auto end = std::chrono::high_resolution_clock::now();
-    std::cout << std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin).count()/1000000.0/n_profiles << "ms per iteration" << std::endl;
-
+    std::cout << std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin).count()/1000000.0/n_profiles/(all_files.size()) << "ms per image" << std::endl;
     
     return 0;
 }

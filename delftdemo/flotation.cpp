@@ -6,10 +6,8 @@
 #include <vector>
 #include <cmath>
 
-// 3rd party libraries. You     make install (installs the library to /usr/local/include)
-#include <fftw3.h> // make install this, and add the appropriate locations to
-                   // to both the Header and the Library search paths.
-                   // Linker flags required: "-lfftw3 -lm"
+// 3rd party libraries. Please see README.txt to see how to install and set up.
+#include <fftw3.h>
 #include "bitmap_image.hpp"
 #include "Eigen/Core"
 #include "opencv2/opencv.hpp"
@@ -107,20 +105,6 @@ Image::Image(const Image & incoming){
     for (std::size_t i=0; i<length_; i++)
         src_[i] = incoming.src_[i];
 };
-
-//Image::Image& operator=(const Image& input){
-//    // Assignment operator
-//    if (this != &input)
-//    {
-//        file_name_       = input.filename_;
-//        width_           = input.width_;
-//        height_          = input.height_;
-//        std::copy(input.src_, input.src_ + input.length_, data_);
-//    }
-//
-//    return *this;
-//}
-
 
 Image::Image(const string & image_filename){
     // Constructor: when creating it from a filename
@@ -247,7 +231,7 @@ fftw_complex* fft2_image(Image inImg){
     // 1. Convert input image to floats, allocating the right size array
     // 2. Create the output storage to receive the FFT result. Use the FFTW
     //    storage types.
-    // N. Clean up the temporary input floating array, and the FFT plan.
+    // 3. Clean up the temporary input floating array, and the FFT plan.
     
     // 1. Note that FFTW stores the image data in row major order
     double *inFFT = new double[inImg.height()*inImg.width()];
@@ -276,11 +260,10 @@ fftw_complex* fft2_image(Image inImg){
     //    }
     //}
     
-    // N. Clean up temporary storage
+    // 3. Clean up temporary storage
     delete[] inFFT;
     fftw_destroy_plan(plan_forward);
     
-    //Image output;
     return outFFT;
 };
 
@@ -314,7 +297,8 @@ MatrixRM ifft2_cImage_to_matrix(fftw_complex* inImg, double scale,
     outputI.resize(height, width);
     for (std::size_t i = 0; i < height; i++ ){
         for (std::size_t j  = 0; j < width; j++ ){
-            *(outputI.data() + i*width+j) = std::abs(scale * outIm[i*width+j] / n_elements);
+            *(outputI.data() + i*width+j) = std::abs(scale * outIm[i*width+j]
+                                                                  / n_elements);
             //cout << "\t" << i << "\t" << j << "\t"
             //     << *(outputI.data() + i*width+j) << endl;
         }
@@ -374,7 +358,8 @@ fftw_complex* gauss_cwt(fftw_complex* inFFT, double scale, double sigma,
             multiplier = exp( neg_sigma_sq * (w_pulse[j] + h_pulse[k]) );
             outFFT[idx][0] = inFFT[idx][0] * multiplier; // real
             outFFT[idx][1] = inFFT[idx][1] * multiplier; // complex
-            //cout << k << "\t" << idx  << "\t" << outFFT[idx][0] << "\t" << outFFT[idx][1] << endl;
+            //cout << k << "\t" << idx  << "\t" << outFFT[idx][0] << "\t"
+            //     << outFFT[idx][1] << endl;
         }
     }
 
@@ -470,7 +455,7 @@ Eigen::VectorXf threshold(const MatrixRM inImg, param model){
         }
     }
     if (n_iter > 99){
-        cout << "The maximum number of while loop iterations has been exceeded. " << endl;
+        cout << "Maximum number of while loop iterations exceeded. " << endl;
         abort();
     }else{
         //cout << "Required " << n_iter << " iterations." << endl;
