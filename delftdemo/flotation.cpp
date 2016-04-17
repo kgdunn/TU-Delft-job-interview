@@ -491,6 +491,8 @@ Eigen::VectorXf project_onto_model(const Eigen::VectorXf& features, param model)
     // For details on the function signature:
     // http://eigen.tuxfamily.org/dox/group__TopicPassingByValue.html
     
+    
+    
     cout << features << endl;
     
     Eigen::VectorXf output(3);
