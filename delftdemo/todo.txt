@@ -1,17 +1,5 @@
-CPUTracker::Gauss2DResult CPUTracker::Compute2DGaussianMLE(vector2f initial, int iterations, float sigma)
-
-
-Add operator= function to the Image class
-
 Template the Image class, to allow float and int
-Make the subsmapling the happen in real
-
-Function that callss Gauss and Threshold repeatedly
-
-
 Use const where you can.
 
-1. Time function: start to end. How to check that accurately?
 2. Plot images to screen: Use OpenCV	
 3. PLot data in a moving snake?
-4. Read the parameters in a separate function.  

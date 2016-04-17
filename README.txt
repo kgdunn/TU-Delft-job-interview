@@ -1,13 +1,14 @@
 This demonstration code was written and tested in XCode 7.3. 
-It has not yet been tested with other compilers and operating systems.
-
-Nothing in the code has been used that would necessarily prevent
-it from working on other platforms.
 
 The code will be explained in detail on Tuesday, 19 April, but if you 
-would like browse, please go ahead. Note that (minor) changes might
+would like browse, please go ahead. Note that (minor) changes will
 occur before Tuesday. Top of this list is the addition of OpenCV
 display windows, to visually illustrate what the code is doing.
+
+A demonstration image has been added to the repository to check the code.
+You will need to alter the directory paths in the code to adjust for 
+file locations on your computer.
+
 
 
 To compile and run the code you will require 5 other libraries. 
