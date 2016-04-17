@@ -15,7 +15,9 @@ int main() {
     auto begin = std::chrono::high_resolution_clock::now();
     
     for (int k=0; k < n_profiles; k++){
-        cout << k << endl;
+        // This outer loop is used for profiling the code and checking for
+        // egregious memory leaks.
+        cout << k << "\t";
         
         string directory = "/Users/kevindunn/Delft/DelftDemo/delftdemo/working-directory/";
         string parameters_file = "model-parameters.yml";
@@ -44,7 +46,7 @@ int main() {
             features(index++) = f1f2[0];
         }
         Eigen::VectorXf calc_outputs = project_onto_model(features, model);
-        
+        cout << calc_outputs.transpose() << endl;
         // Cleanup memory
         fftw_free(image_complex);        
     }

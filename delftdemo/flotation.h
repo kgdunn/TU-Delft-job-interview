@@ -24,11 +24,11 @@ struct param{
     float percent_retained; // percentage energy retained
     
     // Parameters used in the principal component analysis (PCA) model.
-    VectorRM mean_vector;
-    VectorRM scaling_vector;
+    int n_features;         // Number of features used in the PCA projection
+    VectorRM mean_vector;   // 1 x n_features vector
+    VectorRM scaling_vector;// 1 x n_features vector
     int n_components;
-    MatrixRM loadings;
-
+    MatrixRM loadings;      // n_features x n_components matrix
 };
 
 class Image
@@ -56,7 +56,7 @@ public:
     inline unsigned char* start() {return src_;}
 };
 
-// Function prototypes, roughly in the order they are used
+// Function prototypes, roughly in the order they are used:
 param load_model_parameters(std::string directory, std::string filename);
 Image read_image(std::string filename);
 Image subsample_image(Image inImg);

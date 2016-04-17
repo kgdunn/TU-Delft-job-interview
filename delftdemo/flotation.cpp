@@ -23,7 +23,7 @@ param load_model_parameters(std::string directory, std::string filename){
     // create a basic barebones XML file for you that you can tweak by hand,
     // or, of course, uncomment the code to let the software do it for you.
     //
-    if(false){
+    if(true){
         // Once off: if you don't have an YML file, and want to create a basic
         // one then run this code. After that, you can hand-edit the YML.
         cv::FileStorage fs("model-parameters.yml", cv::FileStorage::WRITE);
@@ -34,12 +34,14 @@ param load_model_parameters(std::string directory, std::string filename){
         fs << "percent_retained" << 0.85;   // percentage retained
         fs << "n_components" << 2;          // number of PCA components
 
-        cv::Mat mean_vector = (cv::Mat_<double>(1,6) << 0.026289, 0.016596,
-                                     0.01054, 0.0070988, 0.0050458, 0.0037665);
+        cv::Mat mean_vector = (cv::Mat_<double>(1,6) << 0.026289407767760,
+                      0.016596246522800, 0.010541172410390, 0.007098798177090,
+                      0.005045800751860, 0.003766555672320);
         fs << "mean_vector" << mean_vector;
         
-        cv::Mat scaling_vector = (cv::Mat_<double>(1,6) << 0.0073118, 0.0023734,
-                                  0.0023447, 0.00206796, 0.0016792, 0.0013396);
+        cv::Mat scaling_vector = (cv::Mat_<double>(1,6) <<  0.007311898849230,
+                      0.002373383101510, 0.002344658601980, 0.002067958707430,
+                      0.001679164709720, 0.001339596033420);
         fs << "scaling_vector" << scaling_vector;
         
         // Each component stored in a row, with n_features per row: 2x6
@@ -61,6 +63,7 @@ param load_model_parameters(std::string directory, std::string filename){
     int n_features = -1; // this is intentional!
     for (int i=model.end_level; i>=model.start_level; i-=2)
         n_features += 1;
+    model.n_features = n_features;
     
     cv::Mat mean_vector, scaling_vector, loadings; // temporary matrices
     
@@ -487,14 +490,43 @@ Eigen::VectorXf threshold(const MatrixRM inImg, param model){
 };
 
 Eigen::VectorXf project_onto_model(const Eigen::VectorXf& features, param model){
+    // Projects (applies) the calculated features from the image onto a pre-
+    // existing PCA model. That PCA model was built from the features extracted
+    // on the training image data.
+    
+    // In other words, this function is seeing how similar/dissimilar the
+    // current image is in comparison with the training data.
     
     // For details on the function signature:
     // http://eigen.tuxfamily.org/dox/group__TopicPassingByValue.html
     
+    // First difference the features. (That explains why we count features
+    // starting at -1 in ``param load_model_parameters(...)``.
+    VectorRM pca_features, mcuv_features, pca_scores, spe_vector;
+    pca_features.resize(1, model.n_features);
+    mcuv_features.resize(1, model.n_features);
     
+    // Then mean center and unit-variance (mcuv) scale after calculating
+    // the features.
+    for (int k=0; k < model.n_features; k++){
+        pca_features(k) = features(k+1) - features(k);
+        mcuv_features(k) = (pca_features(k) - model.mean_vector(k)) /
+                                                     model.scaling_vector(k);
+    }
     
-    cout << features << endl;
+    // Calculate the PCA model outputs: the scores, and the SPE vector
+    pca_scores.resize(1, model.n_components);
+    pca_scores = mcuv_features * model.loadings.transpose();
     
-    Eigen::VectorXf output(3);
+    spe_vector.resize(1, model.n_features);
+    spe_vector = pca_scores * model.loadings;
+    double spe_value = norm_threshold(spe_vector.data(), model.n_features, 0);
+
+    // Place the PCA scores and the SPE value in the return vector.
+    // And we are finished!
+    Eigen::VectorXf output(model.n_components+1);
+    for (int k=0; k < model.n_components; k++)
+        output(k) = pca_scores(k);
+    output(model.n_components) = static_cast<float>(spe_value);
     return output;
 };

@@ -25,6 +25,7 @@
 
 /* Begin PBXFileReference section */
 		6C6B39201CC3702400D49799 /* Eigen */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Eigen; sourceTree = "<group>"; };
+		6CA582D61CC4251A003BD4D4 /* README.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.txt; sourceTree = "<group>"; };
 		6CD4DA2C1CC410320067D54D /* model-parameters.yml */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "model-parameters.yml"; sourceTree = "<group>"; };
 		6CFE15A51CC1287200D2391D /* delftdemo */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = delftdemo; sourceTree = BUILT_PRODUCTS_DIR; };
 		6CFE15A81CC1287200D2391D /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
@@ -65,6 +66,7 @@
 			isa = PBXGroup;
 			children = (
 				6CFE15A81CC1287200D2391D /* main.cpp */,
+				6CA582D61CC4251A003BD4D4 /* README.txt */,
 				6CFE15AF1CC129DD00D2391D /* flotation.h */,
 				6CFE15B01CC13B9500D2391D /* flotation.cpp */,
 				6CD4DA2C1CC410320067D54D /* model-parameters.yml */,
