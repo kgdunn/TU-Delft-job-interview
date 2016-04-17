@@ -357,7 +357,7 @@ double norm_threshold(const float *X, long n_elements, int apply_thresh, double 
     return(temp);
 }
 
-std::vector<double> threshold(const MatrixRM inImg, param model){
+Eigen::VectorXf threshold(const MatrixRM inImg, param model){
     // Thresholds the wavelet coefficients based on retained energ. Calculates
     // the percentage of pixels that exceeds this energy level.
     //
@@ -432,20 +432,25 @@ std::vector<double> threshold(const MatrixRM inImg, param model){
     }
     
     // Finished. Assign the outputs and return.
-    std::vector<double> output(2);
+    Eigen::VectorXf output(2);
     if (f1 < f2)
-        output[1] = x1;
+        output(1) = x1;
     else
-        output[1] = x2;
+        output(1) = x2;
     
     output[0] = 0.0;
     for (std::size_t k=0; k < n_elements; k++)
-        output[0] += X[k] > output[1];    // MATLAB: = sum(sum(A >= ThrValue))
-    output[0] = output[0] / static_cast<double>(n_elements);
+        output(0) += X[k] > output(1);    // MATLAB: = sum(sum(A >= ThrValue))
+    output(0) = output(0) / static_cast<double>(n_elements);
     return output;
 };
 
-std::vector<double> project_onto_model(std::vector<double> features, param model){
-    std::vector<double> output(3);
+Eigen::VectorXf project_onto_model(const Eigen::VectorXf& features, param model){
+    
+    // For details on the function signature:
+    // http://eigen.tuxfamily.org/dox/group__TopicPassingByValue.html
+    
+    
+    Eigen::VectorXf output(3);
     return output;
 };

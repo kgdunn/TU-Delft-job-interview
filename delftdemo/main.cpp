@@ -30,7 +30,7 @@ int main() {
         fftw_complex *image_complex = fft2_image(image_1D);
         fftw_complex *wavelet_image;
         MatrixRM restored;
-        vector<double> f1f2;
+        Eigen::VectorXf f1f2;
         Eigen::VectorXf features(7);
         int index = 0;
         for (double scale=1; scale <= 13; scale+=2){
@@ -42,7 +42,7 @@ int main() {
             f1f2 = threshold(restored, coefficients);
             features(index++) = f1f2[0];
         }
-        //vector<double> calc_outputs = project_onto_model(features, coefficients);
+        Eigen::VectorXf calc_outputs = project_onto_model(features, coefficients);
         
         // Cleanup memory
         fftw_free(image_complex);
