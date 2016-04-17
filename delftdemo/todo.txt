@@ -11,4 +11,7 @@ Function that callss Gauss and Threshold repeatedly
 
 Use const where you can.
 
-Time function: start to end. How to check that accurately?
+1. Time function: start to end. How to check that accurately?
+2. Plot images to screen: Use OpenCV	
+3. PLot data in a moving snake?
+4. Read the parameters in a separate function.  

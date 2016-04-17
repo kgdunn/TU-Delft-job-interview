@@ -11,9 +11,14 @@
                    // to both the Header and the Library search paths.
                    // Linker flags required: "-lfftw3 -lm"
 #include "bitmap_image.hpp"
+#include "Eigen/Core"
 
 // Our libraries
 #include "flotation.h"
+
+// Number of rows and columns in the largest image expected to be processed.
+// Helps dynamic memory allocation in the Eigen 3rd-party library.
+int LARGEST_IMAGE = 1000;
 
 param load_model_parameters(std::string directory,
                             std::string filename){
@@ -121,9 +126,7 @@ Image::Image(int rows, int cols, int layers, bool is_complex_image){
 }
 // Destructor
 Image::~Image(){
-    cout << this->width() << endl;
-    cout << this->height() << endl;
-    cout << this->filename << endl;
+    //cout << this->filename << endl;
     delete[] src_;
 }
 
@@ -234,7 +237,8 @@ fftw_complex* fft2_image(Image inImg){
     return outFFT;
 };
 
-Image ifft2_complex_image(fftw_complex* inImg, int height, int width, bool keep_input){
+
+MatrixRM ifft2_cImage_to_matrix(fftw_complex* inImg, int height, int width){
     // Recreates an image from the complex inputs by using the inverse fast
     // Fourier transform.
     //
@@ -243,9 +247,7 @@ Image ifft2_complex_image(fftw_complex* inImg, int height, int width, bool keep_
     // that is as many rows as the original, but roughly half the number of
     // columns. But no consistency checking is done (yet) to ensure you have
     // specified a sane ``height`` and ``width``.
-    
-    // It has the side effect of destroying "inImg", unless you request not to
-    // with the ``keep_input`` flag.
+
 
     double * outIm = new double[height * width];
     fftw_plan plan_backward = fftw_plan_dft_c2r_2d(height, width,
@@ -253,52 +255,36 @@ Image ifft2_complex_image(fftw_complex* inImg, int height, int width, bool keep_
     fftw_execute(plan_backward);
     
     // Copy the result from FFTW to our image storage array
-    Image output(height, width, 1, false);
-    //std::size_t idx = 0x00;
-    
-    // TODO: copy the data over, in float form to a different array structure.
+    MatrixRM outputI;
+    //Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> outputI;
+    //Eigen::MatrixXd outputI(height, width);
+    outputI.resize(height, width);
     for (std::size_t i = 0; i < height; i++ ){
         for (std::size_t j = 0; j < width; j++ ){
+            *(outputI.data() + i*width+j) = outIm[i*width+j] / (double) (height*width);
             //cout << "\t" << i << "\t" << j << "\t"
             //     << outIm[i*width+j] / (double) (height*width) << endl;
         }
     }
-    
+
     // Clean up temporary storage.
     fftw_destroy_plan(plan_backward);
     delete[] outIm;
-    if (!keep_input){
-        fftw_free(inImg);
-    }
-    return output;
+    return outputI;
 };
 
-
-
-Image gauss_cwt(fftw_complex* inFFT, double scale, double sigma,
+fftw_complex* gauss_cwt(fftw_complex* inFFT, double scale, double sigma,
                 int height, int width){
     // Performs the Gaussian Continuous Wavelet Transformation, given the FFT2
-    // transform of the image, ``inImg``
-    
-    // 1. Get pointers to the required parts of the complex input image. R x C
-    //Areal = mxGetPr(prhs[1]);
-    //Aimag = mxGetPi(prhs[1]);
-    
-    // 3. Set up variables required for the calculations
-    //int n_elements = height * width;
-
-    // 2. Set up the output image
-    double *B = new double [height * width];
-    
-    // 3. Intermediate storage required
-    //double *temp_real = new double[height * width];
-    //double *temp_imag = new double[height * width];
-    //tempOutPtr  = mxCreateDoubleMatrix(nRows,nCols,mxCOMPLEX);                 // used for intermediate calculations
+    // transform of the image, ``inImg``. It does that at the required ``scale``,
+    // and at the model parameter ``sigma``.
+    // Some information about the size of the original image, ``height`` and
+    // ``width`` is also required to set up the iFFT2 at the end.
     
     // Create the height and width pulses
     double *h_pulse = new double[height];
     double multiplier_h = 2*3.141592653589/height;
-    int split = static_cast<int>(floor(height/2));
+    int split = floor(height/2);
     for(int k=0; k<split; k++){
         h_pulse[k] = pow(scale * k * multiplier_h, 2);
         h_pulse[k+split] = pow(- scale * multiplier_h * (split-k), 2);
@@ -324,21 +310,21 @@ Image gauss_cwt(fftw_complex* inFFT, double scale, double sigma,
 
     double neg_sigma_sq = -1*pow(sigma, 2.0) / 2.0	;
     double multiplier = 0.0;
-
-    for(std::size_t k=0; k< height; k++){
-        for(std::size_t j=0;j< halfwidth; j++){
+    std::size_t idx = 0;
+    for(std::size_t k=0; k < height; k++){
+        for(std::size_t j=0; j < halfwidth; j++){
+            idx = k*halfwidth + j;
             multiplier = exp( neg_sigma_sq * (w_pulse[j] + h_pulse[k]) );
-            //tempReal[k+j*nRows] = Areal[k+j*nRows] * multiplier;  // multiply by A while we are here (we need to do it
-            //tempImag[k+j*nRows] = Aimag[k+j*nRows] * multiplier;    //   in the next step anyway)
+            outFFT[idx][0] = inFFT[idx][0] * multiplier; // real
+            outFFT[idx][1] = inFFT[idx][1] * multiplier; // complex
+            //cout << k << "\t" << idx  << "\t" << outFFT[idx][0] << "\t" << outFFT[idx][1] << endl;
         }
     }
-    
-    delete[] B;
+
+    // Clean up and return
     delete[] h_pulse;
     delete[] w_pulse;
-  
-    Image output;
-    return output;
+    return outFFT;
 };
 
 Image multiply_scalar(Image inImg, double scalar){
