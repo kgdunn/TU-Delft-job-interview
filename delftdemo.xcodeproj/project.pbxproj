@@ -251,6 +251,8 @@
 					"-lopencv_video",
 					"-lopencv_videoio",
 					"-lopencv_videostab",
+					"-lboost_system",
+					"-lboost_filesystem",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -281,6 +283,8 @@
 					"-lopencv_video",
 					"-lopencv_videoio",
 					"-lopencv_videostab",
+					"-lboost_filesystem",
+					"-lboost_system",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
