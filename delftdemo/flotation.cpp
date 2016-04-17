@@ -238,7 +238,8 @@ fftw_complex* fft2_image(Image inImg){
 };
 
 
-MatrixRM ifft2_cImage_to_matrix(fftw_complex* inImg, int height, int width){
+MatrixRM ifft2_cImage_to_matrix(fftw_complex* inImg, double scale,
+                                int height, int width){
     // Recreates an image from the complex inputs by using the inverse fast
     // Fourier transform.
     //
@@ -248,8 +249,11 @@ MatrixRM ifft2_cImage_to_matrix(fftw_complex* inImg, int height, int width){
     // columns. But no consistency checking is done (yet) to ensure you have
     // specified a sane ``height`` and ``width``.
     //
-    // Note: the stored result is passed through the absolute value function,
+    // Note 1: the stored result is passed through the absolute value function,
     // since that step is required next. It can be done here efficiently.
+    //
+    // Note 2: this function destroys the input ``inImg``, since it is not
+    //         used again after this.
 
 
     double * outIm = new double[height * width];
@@ -260,20 +264,22 @@ MatrixRM ifft2_cImage_to_matrix(fftw_complex* inImg, int height, int width){
     
     // Copy the result from FFTW to our image storage array
     MatrixRM outputI;
-    //Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> outputI;
-    //Eigen::MatrixXd outputI(height, width);
     outputI.resize(height, width);
     for (std::size_t i = 0; i < height; i++ ){
-        for (std::size_t j = 0; j < width; j++ ){
-            *(outputI.data() + i*width+j) = std::abs(outIm[i*width+j] / n_elements);
+        for (std::size_t j  = 0; j < width; j++ ){
+            *(outputI.data() + i*width+j) = std::abs(scale * outIm[i*width+j] / n_elements);
             //cout << "\t" << i << "\t" << j << "\t"
-            //     << outIm[i*width+j] / (double) (height*width) << endl;
+            //     << *(outputI.data() + i*width+j) << endl;
         }
     }
 
     // Clean up temporary storage.
     fftw_destroy_plan(plan_backward);
     delete[] outIm;
+    
+    // Clean up the input image here. It will leak memory if not freed.
+    fftw_free(inImg);
+    
     return outputI;
 };
 

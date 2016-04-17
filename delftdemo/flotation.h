@@ -44,7 +44,7 @@ Image read_image(std::string filename);
 Image subsample_image(Image inImg);
 Image colour2gray(Image inImg);
 fftw_complex* fft2_image(Image inImg);
-MatrixRM ifft2_cImage_to_matrix(fftw_complex* inImg, int height, int width);
+MatrixRM ifft2_cImage_to_matrix(fftw_complex* inImg, double scale, int height, int width);
 fftw_complex* gauss_cwt(fftw_complex* inFFT, double scale, double sigma, int height, int width);
 std::vector<double> threshold(MatrixRM inImg, param model);
 std::vector<double> project_onto_model(std::vector<double> features, param model);
