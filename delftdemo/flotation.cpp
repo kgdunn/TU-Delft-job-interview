@@ -12,32 +12,75 @@
                    // Linker flags required: "-lfftw3 -lm"
 #include "bitmap_image.hpp"
 #include "Eigen/Core"
-
+#include "opencv2/opencv.hpp"
+#include "opencv2/core/core_c.h"
+#include "opencv2/core/persistence.hpp"
 // Our libraries
 #include "flotation.h"
 
-// Number of rows and columns in the largest image expected to be processed.
-// Helps dynamic memory allocation in the Eigen 3rd-party library.
-int LARGEST_IMAGE = 1000;
+param load_model_parameters(std::string directory, std::string filename){
+    // Loads the model parameters from an XML file. The commented code here will
+    // create a basic barebones XML file for you that you can tweak by hand,
+    // or, of course, uncomment the code to let the software do it for you.
+    //
+    if(false){
+        // Once off: if you don't have an YML file, and want to create a basic
+        // one then run this code. After that, you can hand-edit the YML.
+        cv::FileStorage fs("model-parameters.yml", cv::FileStorage::WRITE);
+        fs << "subsample_image" << 1;       // cuts image size by 4
+        fs << "start_level" << 1;           // start and ends levels for the
+        fs << "end_level" << 13;            // wavelet resolution
+        fs << "sigma_xy" << 1.0;            // Gaussian coefficient
+        fs << "percent_retained" << 0.85;   // percentage retained
+        fs << "n_components" << 2;          // number of PCA components
 
-param load_model_parameters(std::string directory,
-                            std::string filename){
+        cv::Mat mean_vector = (cv::Mat_<double>(1,6) << 0.026289, 0.016596,
+                                     0.01054, 0.0070988, 0.0050458, 0.0037665);
+        fs << "mean_vector" << mean_vector;
+        
+        cv::Mat scaling_vector = (cv::Mat_<double>(1,6) << 0.0073118, 0.0023734,
+                                  0.0023447, 0.00206796, 0.0016792, 0.0013396);
+        fs << "scaling_vector" << scaling_vector;
+        
+        // Each component stored in a row, with n_features per row: 2x6
+        cv::Mat loadings = (cv::Mat_<double>(2,6) << -0.3731, 0.2012, 0.4418,
+                            0.4612, 0.4583, 0.4499, -0.5057, -0.8117, -0.2479,
+                            -0.0237, 0.0789, 0.1310);
+        fs << "loadings" << loadings;
+    }
     
-    param output;
-    //FILE *f = fopen(filename.c_str(), "r");
-    //    std::vector<BeadPos> beads;
-    //
-    //    if (!f) return beads;
-    //
-    //    while (!feof(f)) {
-    //        BeadPos bp;
-    //        fscanf(f, "%d\t%d\n", &bp.x,&bp.y);
-    //        beads.push_back(bp);
-    //    }
-    //
-    //    fclose(f);
-    //    return beads;
-    return output;
+    // Loads the settings from the YML file. These will be applied to all images.
+    param model;
+    cv::FileStorage fs((directory+filename).c_str(), cv::FileStorage::READ);
+    fs["subsample_image"] >> model.subsample_image;
+    fs["start_level"] >> model.start_level;
+    fs["end_level"] >> model.end_level;
+    fs["sigma_xy"] >> model.sigma_xy;
+    fs["percent_retained"] >> model.percent_retained;
+    fs["n_components"] >> model.n_components;
+    int n_features = -1; // this is intentional!
+    for (int i=model.end_level; i>=model.start_level; i-=2)
+        n_features += 1;
+    
+    cv::Mat mean_vector, scaling_vector, loadings; // temporary matrices
+    
+    // Parameters used in the principal component analysis (PCA) model.
+    fs["mean_vector"] >> mean_vector;
+    model.mean_vector.resize(1, n_features);
+    for (int k=0; k < n_features; k++)
+        model.mean_vector(k) = mean_vector.at<double>(k);
+    
+    fs["scaling_vector"] >> scaling_vector;
+    model.scaling_vector.resize(1, n_features);
+    for (int k=0; k < n_features; k++)
+        model.scaling_vector(k) = scaling_vector.at<double>(k);
+    
+    fs["loadings"] >> loadings;
+    model.loadings.resize(model.n_components, n_features);
+    for (int k=0; k < model.n_components; k++) //row
+        for (int j=0; j < n_features; j++) //col
+            model.loadings(k, j) = loadings.at<double>(k, j);
+    return model;
 };
 
 
@@ -364,12 +407,10 @@ Eigen::VectorXf threshold(const MatrixRM inImg, param model){
     // Returns: 2-element vector
     //   1/ The percentage retained coefficients.
     //   2/ The threshold value computed to retain an energy level.
-    
-    // 0. Abstract this into the model, once debugged
-    double per_retained = 0.85;
-    
+
     
     // 1. Initialize parameters required to determine the thresholding value
+    double per_retained = model.percent_retained;
     long n_elements = inImg.rows() * inImg.cols();
     const float* X = inImg.data();
     float stdX = 0.0;
@@ -450,6 +491,7 @@ Eigen::VectorXf project_onto_model(const Eigen::VectorXf& features, param model)
     // For details on the function signature:
     // http://eigen.tuxfamily.org/dox/group__TopicPassingByValue.html
     
+    cout << features << endl;
     
     Eigen::VectorXf output(3);
     return output;

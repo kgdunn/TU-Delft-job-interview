@@ -1,9 +1,11 @@
 #include <iostream>
 #include <string>
 #include <vector>
+
 #include "flotation.h"
 #include <fftw3.h>
 #include "Eigen/Core"
+
 
 using namespace std;
 
@@ -15,10 +17,9 @@ int main() {
     for (int k=0; k < n_profiles; k++){
         cout << k << endl;
         
-        string directory = "/Users/kevindunn/Delft/demo/gui/source/";
-        string parameters_file = "model-parameters.xml";
-
-        param coefficients = load_model_parameters(directory, parameters_file);
+        string directory = "/Users/kevindunn/Delft/DelftDemo/delftdemo/working-directory/";
+        string parameters_file = "model-parameters.yml";
+        param model = load_model_parameters(directory, parameters_file);
         
         //for-loop here
         string dummy_filename = "/Users/kevindunn/Delft/DelftDemo/delftdemo/delftdemo/testing-image.bmp";
@@ -39,14 +40,13 @@ int main() {
             restored = ifft2_cImage_to_matrix(wavelet_image, scale,
                                               image_1D.height(),
                                               image_1D.width());
-            f1f2 = threshold(restored, coefficients);
+            f1f2 = threshold(restored, model);
             features(index++) = f1f2[0];
         }
-        Eigen::VectorXf calc_outputs = project_onto_model(features, coefficients);
+        Eigen::VectorXf calc_outputs = project_onto_model(features, model);
         
         // Cleanup memory
-        fftw_free(image_complex);
-        
+        fftw_free(image_complex);        
     }
     auto end = std::chrono::high_resolution_clock::now();
     std::cout << std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin).count()/1000000.0/n_profiles << "ms per iteration" << std::endl;

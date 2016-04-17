@@ -10,8 +10,26 @@ using namespace std;
 // Use Eigen for matrix computations, and typedef alias a shorter name.
 #include "Eigen/Core"
 typedef Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> MatrixRM;
+typedef Eigen::Matrix<float, 1, Eigen::Dynamic> VectorRM;
 
-struct param{};
+struct param{
+    // A structure that holds the model parameters that are used to process
+    // each image. The structure is considered "read-only", i.e. no results
+    // are stored in it.
+    
+    int subsample_image;    // cuts image size by a factor of 2(rows)*2(cols)=4
+    float start_level;      // start and end levels for the
+    float end_level;        // wavelet resolution
+    float sigma_xy;         // Gaussian coefficient
+    float percent_retained; // percentage energy retained
+    
+    // Parameters used in the principal component analysis (PCA) model.
+    VectorRM mean_vector;
+    VectorRM scaling_vector;
+    int n_components;
+    MatrixRM loadings;
+
+};
 
 class Image
 {
