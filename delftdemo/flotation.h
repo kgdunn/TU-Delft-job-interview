@@ -48,8 +48,8 @@ public:
     // Three different constructor options
     Image();
     Image(int rows, int cols, int layers, bool is_complex = false);
-    Image(const Image &);
-    Image(const string & filename);  // Copy constructor
+    Image(const string &filename);
+    Image(const Image &);   // Copy constructor
     //Image& operator=(const Image& input);   // Assignment operator
     ~Image();
   

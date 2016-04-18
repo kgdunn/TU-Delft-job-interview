@@ -98,7 +98,7 @@ Image::Image(){
     filename = "";
 }
 
-Image::Image(const Image & incoming){
+Image::Image(const Image &incoming){
     // Copy constructor: creates a deepcopy
     rows_ = incoming.rows_;
     cols_ = incoming.cols_;
