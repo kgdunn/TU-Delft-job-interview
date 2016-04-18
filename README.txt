@@ -8,7 +8,7 @@ adjust settings on the process, so that the process moves to a region of
 stable operation. The outputs can (and have) been used for automatic control
 of image appearance.
 
-All code (except for external libraries), have been written by Kevin Dunn
+All code (except for external libraries), has been written by Kevin Dunn
 14 to 18 April 2016, as demonstration for a job interview at TU Delft.
 
 This demonstration code was written and tested in XCode 7.3. 

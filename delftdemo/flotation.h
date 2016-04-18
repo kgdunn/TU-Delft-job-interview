@@ -23,6 +23,8 @@ struct param{
     float end_level;        // wavelet resolution
     float sigma_xy;         // Gaussian coefficient
     float percent_retained; // percentage energy retained
+    bool display_results;   // writes results to file, for later display
+    string working_dir;     // where images should be written to
     
     // Parameters used in the principal component analysis (PCA) model.
     int n_features;         // Number of features used in the PCA projection
@@ -45,7 +47,7 @@ public:
     Image();
     Image(int rows, int cols, int layers, bool is_complex = false);
     Image(const Image &);
-    Image(const string & filename);         // Copy constructor
+    Image(const string & filename);  // Copy constructor
     //Image& operator=(const Image& input);   // Assignment operator
     ~Image();
   
@@ -58,14 +60,18 @@ public:
 };
 
 // Function prototypes, roughly in the order they are used:
-param load_model_parameters(std::string directory, std::string filename);
-Image read_image(std::string filename);
+param load_model_parameters(string directory, string filename);
+Image read_image(string filename);
 Image subsample_image(Image inImg);
 Image colour2gray(Image inImg);
 fftw_complex* fft2_image(Image inImg);
-MatrixRM ifft2_cImage_to_matrix(fftw_complex* inImg, double scale, int height, int width);
-fftw_complex* gauss_cwt(fftw_complex* inFFT, double scale, double sigma, int height, int width);
+MatrixRM ifft2_cImage_to_matrix(fftw_complex* inImg, double scale,
+                                int height, int width, param model);
+fftw_complex* gauss_cwt(fftw_complex* inFFT, double scale, double sigma,
+                        int height, int width);
 Eigen::VectorXf threshold(MatrixRM inImg, param model);
 Eigen::VectorXf project_onto_model(const Eigen::VectorXf& features, param model);
 
+// Note: this function is not my own work. It is documented in flotation.cpp.
+cv::Mat makeCanvas(vector<cv::Mat>& vecMat, int windowHeight, int nRows);
 #endif /* flotation_h */

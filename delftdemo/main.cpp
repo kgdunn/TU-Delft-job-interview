@@ -1,7 +1,8 @@
-// This code processes images from a flotation cell and extracts textures from
-// the image. These texture features are projected onto a multivariate
-// (principal component analysis, PCA) model, to determine how close the
-// appearance of the image is to the "desirable" appearance.
+// This code processes images from a flotation cell
+// https://en.wikipedia.org/wiki/Froth_flotation
+// and extracts textures from the image. These texture features are projected
+// onto a multivariate (principal component analysis, PCA) model, to determine
+// how close the appearance of the image is to the "desirable" appearance.
 //
 // People that operate the flotation cells can therefore use this model to
 // adjust settings on the process, so that the process moves to a region of
@@ -22,6 +23,7 @@
 #include "Eigen/Core"
 #include "opencv2/core/persistence.hpp"
 #include <boost/filesystem.hpp>
+#include <opencv2/highgui/highgui.hpp>
 
 // Our libraries
 #include "flotation.h"
@@ -29,12 +31,11 @@
 using namespace std;
 using namespace boost::filesystem;
 
-
 int main() {
     
     int n_profiles = 5;
-    auto begin = std::chrono::high_resolution_clock::now();
-    std::vector<std::string> all_files;
+    auto begin = chrono::high_resolution_clock::now();
+    vector<string> all_files;
     
     for (int k=0; k < n_profiles; k++){
         // This outer loop is used for profiling the code and checking for
@@ -42,17 +43,18 @@ int main() {
         // of iterations.
         cout << k << "\t";
         
+        bool display_results = true;
         string directory = "/Users/kevindunn/Delft/DelftDemo/delftdemo/working-directory/";
         string parameters_file = "model-parameters.yml";
         param model = load_model_parameters(directory, parameters_file);
-        
-        string filename_extenion_filter = ".bmp";
+        model.working_dir = directory;
+        string filename_extenion_filter = ".bmp";        
         try{
             if (exists(directory) && is_directory(directory)){
                 for (auto&& x : directory_iterator(directory))
                     if (x.path().extension() == filename_extenion_filter)
                         all_files.push_back(x.path().filename().string());
-            std::sort(all_files.begin(), all_files.end());
+            sort(all_files.begin(), all_files.end());
             }
         }
         catch(const filesystem_error& ex){
@@ -80,19 +82,41 @@ int main() {
                                           image_1D.height(), image_1D.width());
                 restored = ifft2_cImage_to_matrix(wavelet_image, scale,
                                                   image_1D.height(),
-                                                  image_1D.width());
+                                                  image_1D.width(), model);
                 f1f2 = threshold(restored, model);
                 features(index++) = f1f2[0];
             }
             Eigen::VectorXf calc_outputs = project_onto_model(features, model);
             cout << calc_outputs.transpose() << endl;
+            
+            
+            if (display_results){
+                vector<cv::Mat> results(1);
+                cv::Mat raw_data = cv::imread((directory+filename).c_str());
+                //cv::Mat cm_img0;
+                //cv::applyColorMap(img0, cm_img0, cv::COLORMAP_JET);
+                
+                results[0] = raw_data;
+                cv::Mat image_canvas_results = makeCanvas(results, 500, 2);
+                namedWindow(filename, cv::WINDOW_AUTOSIZE);
+                imshow(filename, raw_data);
+                cv::waitKey(0);
+            }
+            
+            
+            
+            
             // Cleanup memory
             fftw_free(image_complex);
+            
+            
+            
+            
         }
         
     }// k=0; k<n_profiles; profiling loop
     
-    auto end = std::chrono::high_resolution_clock::now();
+    auto end = chrono::high_resolution_clock::now();
     cout << chrono::duration_cast<chrono::nanoseconds>(end-begin).count()
              /1000000.0/n_profiles/(all_files.size()) << "ms per image" << endl;
     return 0;

@@ -13,6 +13,9 @@
 #include "opencv2/opencv.hpp"
 #include "opencv2/core/core_c.h"
 #include "opencv2/core/persistence.hpp"
+#include <opencv2/highgui/highgui.hpp>
+
+using namespace cv;
 
 // Our libraries
 #include "flotation.h"
@@ -32,6 +35,8 @@ param load_model_parameters(std::string directory, std::string filename){
         fs << "sigma_xy" << 1.0;            // Gaussian coefficient
         fs << "percent_retained" << 0.85;   // percentage retained
         fs << "n_components" << 2;          // number of PCA components
+        fs << "display_results" << true;    // writes intermediate files to disk
+                                            // so images can be viewed later
 
         cv::Mat mean_vector = (cv::Mat_<double>(1,6) << 0.026289407767760,
                       0.016596246522800, 0.010541172410390, 0.007098798177090,
@@ -59,6 +64,7 @@ param load_model_parameters(std::string directory, std::string filename){
     fs["sigma_xy"] >> model.sigma_xy;
     fs["percent_retained"] >> model.percent_retained;
     fs["n_components"] >> model.n_components;
+    fs["display_results"] >> model.display_results;
     int n_features = -1; // this is intentional!
     for (int i=model.end_level; i>=model.start_level; i-=2)
         n_features += 1;
@@ -186,7 +192,7 @@ Image subsample_image(Image inImg){
     for (std::size_t j=0; j<inH; j+=2){
         for (std::size_t i=0; i<inW; i+=2){
             for (std::size_t k=0; k < layers; k++){
-                outI[idx++] = inI[j*inW*layers+i*layers+k];
+                outI[idx++] = inI[j*inW*layers + i*layers + k];
                 //cout << static_cast<int>(inI[j*inW*layers+i*layers+k]) << endl;
                 //cout << static_cast<int>(outI[idx-1]) << endl;
             }
@@ -194,6 +200,21 @@ Image subsample_image(Image inImg){
     }
     return output;
 };
+
+//cv::Mat BMP_to_CV(Image inImg, cv::Mat outImg){
+//    // Maps our bitmap image to an OpenCV Mat type.
+//    // So that they can be displayed, edited, manipulated, etc.
+//    
+//    if(inImg.layers() == 3){
+//        cv::Mat outImg = cv::Mat(3, {inImg.height(), inImg.width()}, CV_8UC3, cv::Scalar::all(0));
+//    }
+//    else{
+//        cout << "Images with only 3 layers (BGR) are currently supported." << endl;
+//        abort();
+//    }
+//    return
+//}
+
 
 Image colour2gray(Image inImg){
     // Convert a 3-channel BRG image to a grayscale image.
@@ -270,7 +291,7 @@ fftw_complex* fft2_image(Image inImg){
 
 
 MatrixRM ifft2_cImage_to_matrix(fftw_complex* inImg, double scale,
-                                int height, int width){
+                                int height, int width, param model){
     // Recreates an image from the complex inputs by using the inverse fast
     // Fourier transform.
     //
@@ -311,6 +332,26 @@ MatrixRM ifft2_cImage_to_matrix(fftw_complex* inImg, double scale,
     
     // Clean up the input image here. It will leak memory if not freed.
     fftw_free(inImg);
+    
+    if (model.display_results){
+        // Write the image result to a JPG file, to visualize outside this
+        // function. Using ``display_results=true`` will slow processing.
+        string fname = model.working_dir + "texture-01.jpg";
+        cv::Mat outputI_cv(height, width, CV_8UC1);
+        unsigned char* outputI_ptr = outputI_cv.ptr<unsigned char>(0);
+        float subtractor = outputI.minCoeff();
+        float max = outputI.maxCoeff();
+        float scaling_factor = 255.0 / (max - subtractor);
+        for (std::size_t i = 0; i < height; i++ ){
+            for (std::size_t j  = 0; j < width; j++ ){
+                outputI_ptr[i*width+j] = (*(outputI.data() + i*width+j) - subtractor)
+                                                        / scaling_factor;
+            }
+        }
+        cv::Mat color_mapped_image;
+        cv::applyColorMap(outputI_cv, color_mapped_image, cv::COLORMAP_JET);
+        cv::imwrite(fname, color_mapped_image);
+    }
     
     return outputI;
 };
@@ -520,3 +561,65 @@ Eigen::VectorXf project_onto_model(const Eigen::VectorXf& features, param model)
     output(model.n_components) = static_cast<float>(spe_value);
     return output;
 };
+
+
+// Code to display the image results in an OpenCV window
+// Code is directly from:
+// http://stackoverflow.com/questions/5089927/show-multiple-2-3-4-images-in-the-same-window-in-opencv
+/**
+ * @brief makeCanvas Makes composite image from the given images
+ * @param vecMat Vector of Images.
+ * @param windowHeight The height of the new composite image to be formed.
+ * @param nRows Number of rows of images. (Number of columns will be calculated
+ *              depending on the value of total number of images).
+ * @return new composite image.
+ */
+cv::Mat makeCanvas(std::vector<cv::Mat>& vecMat, int windowHeight, int nRows) {
+    int N = static_cast<int>(vecMat.size());
+    nRows  = nRows > N ? N : nRows;
+    int edgeThickness = 10;
+    int imagesPerRow = ceil(double(N) / nRows);
+    int resizeHeight = floor(2.0 * ((floor(double(windowHeight - edgeThickness) / nRows)) / 2.0)) - edgeThickness;
+    int maxRowLength = 0;
+    
+    std::vector<int> resizeWidth;
+    for (int i = 0; i < N;) {
+        int thisRowLen = 0;
+        for (int k = 0; k < imagesPerRow; k++) {
+            double aspectRatio = double(vecMat[i].cols) / vecMat[i].rows;
+            int temp = int( ceil(resizeHeight * aspectRatio));
+            resizeWidth.push_back(temp);
+            thisRowLen += temp;
+            if (++i == N) break;
+        }
+        if ((thisRowLen + edgeThickness * (imagesPerRow + 1)) > maxRowLength) {
+            maxRowLength = thisRowLen + edgeThickness * (imagesPerRow + 1);
+        }
+    }
+    int windowWidth = maxRowLength;
+    cv::Mat canvasImage(windowHeight, windowWidth, CV_8UC3, cv::Scalar(0, 0, 0));
+    
+    for (int k = 0, i = 0; i < nRows; i++) {
+        int y = i * resizeHeight + (i + 1) * edgeThickness;
+        int x_end = edgeThickness;
+        for (int j = 0; j < imagesPerRow && k < N; k++, j++) {
+            int x = x_end;
+            cv::Rect roi(x, y, resizeWidth[k], resizeHeight);
+            cv::Size s = canvasImage(roi).size();
+            // change the number of channels to three
+            cv::Mat target_ROI(s, CV_8UC3);
+            if (vecMat[k].channels() != canvasImage.channels()) {
+                if (vecMat[k].channels() == 1) {
+                    cv::cvtColor(vecMat[k], target_ROI, CV_GRAY2BGR);
+                }
+            }
+            cv::resize(target_ROI, target_ROI, s);
+            if (target_ROI.type() != canvasImage.type()) {
+                target_ROI.convertTo(target_ROI, canvasImage.type());
+            }
+            target_ROI.copyTo(canvasImage(roi));
+            x_end += resizeWidth[k] + edgeThickness;
+        }
+    }
+    return canvasImage;
+}
