@@ -14,7 +14,7 @@ All code (except for external libraries), have been written by Kevin Dunn
 This demonstration code was written and tested in XCode 7.3. 
 
 The code will be explained in detail on Tuesday, 19 April, but if you 
-would like to browse, please go ahead it. Note that (minor) changes will
+would like to browse it, please go ahead. Note that (minor) changes will
 occur before Tuesday. Hopefully the addition of OpenCV display windows, 
 to visually illustrate what the code is doing.
 

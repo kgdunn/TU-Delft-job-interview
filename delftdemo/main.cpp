@@ -32,13 +32,14 @@ using namespace boost::filesystem;
 
 int main() {
     
-    int n_profiles = 1;
+    int n_profiles = 5;
     auto begin = std::chrono::high_resolution_clock::now();
     std::vector<std::string> all_files;
     
     for (int k=0; k < n_profiles; k++){
         // This outer loop is used for profiling the code and checking for
-        // egregious memory leaks.
+        // egregious memory leaks. None noticed when profiling for 1000's
+        // of iterations.
         cout << k << "\t";
         
         string directory = "/Users/kevindunn/Delft/DelftDemo/delftdemo/working-directory/";
@@ -60,6 +61,10 @@ int main() {
         
         //string filename = "/Users/kevindunn/Delft/DelftDemo/delftdemo/delftdemo/testing-image.bmp";
         for (auto filename : all_files){
+            // Process each new flotation image in the pipeline below.
+            // Each function is mostly modular, and can be replaced with an
+            // alternative, to suit the researcher's preference.
+            
             // The image processing pipeline:
             Image raw_image_nD  = read_image((directory+filename).c_str());
             Image image_nD_sub  = subsample_image(raw_image_nD);
@@ -85,10 +90,11 @@ int main() {
             fftw_free(image_complex);
         }
         
-    }
-    auto end = std::chrono::high_resolution_clock::now();
-    std::cout << std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin).count()/1000000.0/n_profiles/(all_files.size()) << "ms per image" << std::endl;
+    }// k=0; k<n_profiles; profiling loop
     
+    auto end = std::chrono::high_resolution_clock::now();
+    cout << chrono::duration_cast<chrono::nanoseconds>(end-begin).count()
+             /1000000.0/n_profiles/(all_files.size()) << "ms per image" << endl;
     return 0;
 }
 

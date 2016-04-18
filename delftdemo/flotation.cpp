@@ -43,7 +43,7 @@ param load_model_parameters(std::string directory, std::string filename){
                       0.001679164709720, 0.001339596033420);
         fs << "scaling_vector" << scaling_vector;
         
-        // Each component stored in a row, with n_features per row: 2x6
+        // Each component stored in a row, with ``n_features`` per row: 2x6
         cv::Mat loadings = (cv::Mat_<double>(2,6) << -0.3731, 0.2012, 0.4418,
                             0.4612, 0.4583, 0.4499, -0.5057, -0.8117, -0.2479,
                             -0.0237, 0.0789, 0.1310);
@@ -107,7 +107,7 @@ Image::Image(const Image & incoming){
 };
 
 Image::Image(const string & image_filename){
-    // Constructor: when creating it from a filename
+    // Constructor: when creating an image from a filename
     // Reads a bitmap BMP image (using the bitmap_image.hpp library).
     // Reads it into our Image class.
     
@@ -129,7 +129,8 @@ Image::Image(const string & image_filename){
         src_ = new unsigned char[length_];
         // The image data is aligned as BGR, BGR triplets
         // Starting at (0,0) top left, and going across the first row. Once
-        // that is down, it moves to the next row. From top to bottom.
+        // that is done, it moves to the next row. From top to bottom.
+        // In other words: it is row-major aligned.
         unsigned char* start = image.data();
         for (std::size_t i=0; i< length_; i++){
             src_[i] = start[i];
@@ -169,7 +170,7 @@ Image read_image(std::string filename){
 Image subsample_image(Image inImg){
     // Takes every second pixel, starting at (0,0) top left, and going to
     // the edges. Images with uneven columns or rows will omit that last
-    // column or row
+    // column or row.
     int inW = inImg.width();
     int inH = inImg.height();
     int width = static_cast<int>(floor(inW / 2.0));
@@ -324,7 +325,7 @@ fftw_complex* gauss_cwt(fftw_complex* inFFT, double scale, double sigma,
     
     // Create the height and width pulses
     double *h_pulse = new double[height];
-    double multiplier_h = 2*3.141592653589/height;
+    double multiplier_h = 2 * M_PI / height;
     int split = floor(height/2);
     for(int k=0; k<split; k++){
         h_pulse[k] = pow(scale * k * multiplier_h, 2);
@@ -333,7 +334,7 @@ fftw_complex* gauss_cwt(fftw_complex* inFFT, double scale, double sigma,
     }
     
     double *w_pulse = new double[width];
-    double multiplier_w = 2*3.141592653589/width;
+    double multiplier_w = 2 * M_PI / width;
     split = width/2;
     for(int k=0; k<split; k++){
         w_pulse[k] = pow(scale * k * multiplier_w, 2);
@@ -349,7 +350,7 @@ fftw_complex* gauss_cwt(fftw_complex* inFFT, double scale, double sigma,
     std::size_t fft_size = sizeof(fftw_complex)* height * halfwidth;
     fftw_complex *outFFT = (fftw_complex*)fftw_malloc (fft_size);
 
-    double neg_sigma_sq = -1*pow(sigma, 2.0) / 2.0	;
+    double neg_sigma_sq = -0.5*pow(sigma, 2.0);
     double multiplier = 0.0;
     std::size_t idx = 0;
     for(std::size_t k=0; k < height; k++){
@@ -435,9 +436,12 @@ Eigen::VectorXf threshold(const MatrixRM inImg, param model){
     f2 = std::abs(norm_threshold(X, n_elements,1, x2)/base_energy - per_retained);
     
     // 4. Run the search algorithm in a while loop, protecting for the case of
-    //    non-convergence
+    //    non-convergence. Allows a maximum of 100 iterations. Most images
+    //    use around 30 to 38 iterations.
     int n_iter = 0;
-    while ((std::abs(x3-x0)/stdX > 0.000001) && (n_iter < 100)){
+    int max_iterations = 100;
+    double tolerance = 0.000001;
+    while ((std::abs(x3-x0)/stdX > tolerance) && (n_iter < max_iterations)){
         n_iter++;
         if (f2 < f1){
             x0 = x1;
@@ -454,7 +458,7 @@ Eigen::VectorXf threshold(const MatrixRM inImg, param model){
             f1 = std::abs(norm_threshold(X ,n_elements, 1, x1)/base_energy - per_retained);
         }
     }
-    if (n_iter > 99){
+    if (n_iter >= max_iterations){
         cout << "Maximum number of while loop iterations exceeded. " << endl;
         abort();
     }else{
