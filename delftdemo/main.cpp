@@ -23,6 +23,7 @@
 #include "Eigen/Core"
 #include "opencv2/core/persistence.hpp"
 #include <boost/filesystem.hpp>
+#include <boost/circular_buffer.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
 // Our libraries
@@ -43,7 +44,6 @@ int main() {
         // of iterations.
         cout << k << "\t";
         
-        bool display_results = true;
         string directory = "/Users/kevindunn/Delft/DelftDemo/delftdemo/working-directory/";
         string parameters_file = "model-parameters.yml";
         param model = load_model_parameters(directory, parameters_file);
@@ -60,6 +60,11 @@ int main() {
         catch(const filesystem_error& ex){
             cout << ex.what() << '\n';
         }
+        
+        // We wish to keep the last 10 results in a buffer (to display)
+        int show_results = 10;
+        boost::circular_buffer<Eigen::VectorXf> buffer(show_results);
+        
         
         //string filename = "/Users/kevindunn/Delft/DelftDemo/delftdemo/delftdemo/testing-image.bmp";
         for (auto filename : all_files){
@@ -89,28 +94,23 @@ int main() {
             Eigen::VectorXf calc_outputs = project_onto_model(features, model);
             cout << calc_outputs.transpose() << endl;
             
+            // Store the results in a circular buffer for display:
+            buffer.push_back(calc_outputs);            
             
-            if (display_results){
+            if (model.display_results){
                 vector<cv::Mat> results(1);
                 cv::Mat raw_data = cv::imread((directory+filename).c_str());
-                //cv::Mat cm_img0;
-                //cv::applyColorMap(img0, cm_img0, cv::COLORMAP_JET);
-                
                 results[0] = raw_data;
                 cv::Mat image_canvas_results = makeCanvas(results, 500, 2);
-                namedWindow(filename, cv::WINDOW_AUTOSIZE);
-                imshow(filename, raw_data);
+                cv::namedWindow(filename, cv::WINDOW_AUTOSIZE);
+                cv::imshow(filename, raw_data);
                 cv::waitKey(0);
+                cv::destroyWindow(filename);
             }
-            
-            
-            
             
             // Cleanup memory
             fftw_free(image_complex);
-            
-            
-            
+         
             
         }
         

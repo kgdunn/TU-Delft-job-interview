@@ -35,7 +35,7 @@ param load_model_parameters(std::string directory, std::string filename){
         fs << "sigma_xy" << 1.0;            // Gaussian coefficient
         fs << "percent_retained" << 0.85;   // percentage retained
         fs << "n_components" << 2;          // number of PCA components
-        fs << "display_results" << true;    // writes intermediate files to disk
+        fs << "display_results" << false;   // writes intermediate files to disk
                                             // so images can be viewed later
 
         cv::Mat mean_vector = (cv::Mat_<double>(1,6) << 0.026289407767760,
@@ -336,7 +336,7 @@ MatrixRM ifft2_cImage_to_matrix(fftw_complex* inImg, double scale,
     if (model.display_results){
         // Write the image result to a JPG file, to visualize outside this
         // function. Using ``display_results=true`` will slow processing.
-        string fname = model.working_dir + "texture-01.jpg";
+        string fname = model.working_dir + "texture-" + to_string((int)scale) + ".jpg";
         cv::Mat outputI_cv(height, width, CV_8UC1);
         unsigned char* outputI_ptr = outputI_cv.ptr<unsigned char>(0);
         float subtractor = outputI.minCoeff();
@@ -351,8 +351,8 @@ MatrixRM ifft2_cImage_to_matrix(fftw_complex* inImg, double scale,
         cv::Mat color_mapped_image;
         cv::applyColorMap(outputI_cv, color_mapped_image, cv::COLORMAP_JET);
         cv::imwrite(fname, color_mapped_image);
+        
     }
-    
     return outputI;
 };
 
