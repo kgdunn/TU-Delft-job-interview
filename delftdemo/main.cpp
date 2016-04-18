@@ -60,7 +60,9 @@ int main() {
         }
         
         //string filename = "/Users/kevindunn/Delft/DelftDemo/delftdemo/delftdemo/testing-image.bmp";
+        int img_index = 0;
         for (auto filename : all_files){
+            
             // Process each new flotation image in the pipeline below.
             // Each function is mostly modular, and can be replaced with an
             // alternative, to suit the researcher's preference.
@@ -86,7 +88,21 @@ int main() {
                 features(index++) = f1f2[0];
             }
             Eigen::VectorXf calc_outputs = project_onto_model(features, model);
-            cout << calc_outputs.transpose() << endl;
+            
+            // MATLAB: bubble_size = sqrt(sum(features)/sum(features./(1:6).^2))
+            VectorRM bub_size_num, bub_size_den;
+            bub_size_num.resize(1, model.n_features);
+            bub_size_den.resize(1, model.n_features);
+            for (int k=0; k < model.n_features; k++){
+                bub_size_num(k) = (features(k+1) - features(k));
+                bub_size_den(k) = (features(k+1) - features(k)) / pow(k+1, 2);
+            }
+            double bubble_size = bub_size_num.sum()/bub_size_den.sum();
+            
+            // Display inside the software
+            cout << img_index << "\t" << calc_outputs.transpose()
+                 << "\t" << bubble_size << endl;
+            img_index++;
             
             // Cleanup memory
             fftw_free(image_complex);
@@ -94,13 +110,14 @@ int main() {
             if(model.display_results){
                 // Write the results to a CSV file. This will be displayed in MATLAB
                 std::ofstream computed_results;
-                computed_results.open ((directory+"features.csv").c_str());
+                computed_results.open ((directory + "temp/features.csv").c_str());
                 computed_results << calc_outputs(0) << "," << calc_outputs(1)
-                                 << "," << calc_outputs(2) << ",	19" << endl;
+                                 << "," << calc_outputs(2) << ","
+                                 << bubble_size << endl;
                 computed_results.close();
                 
                 // Write the raw image result to a JPG file,.
-                string fname = model.working_dir + "raw-image.bmp";
+                string fname = model.working_dir + "temp/raw-image.bmp";
                 int height = raw_image_nD.height();
                 int width = raw_image_nD.width();
                 cv::Mat outputI_cv(height, raw_image_nD.width(), CV_8UC3);
