@@ -1,3 +1,15 @@
+This code processes images from a flotation cell and extracts textures from
+the image. These texture features are regressed onto a multivariate
+(principal component analysis, PCA) model, to determine how close the
+appearance of the image is to the "desirable" appearance.
+
+People that operate the flotation cells can therefore use this model to
+adjust settings on the process, so that process moves to stable operation.
+The outputs can (and have) been used for automatic control of appearance.
+
+All code (except for external libraries), have been written by Kevin Dunn
+14 to 18 April 2016, as demonstration for a job interview at TU Delft.
+
 This demonstration code was written and tested in XCode 7.3. 
 
 The code will be explained in detail on Tuesday, 19 April, but if you 
@@ -8,8 +20,6 @@ display windows, to visually illustrate what the code is doing.
 A demonstration image has been added to the repository to check the code.
 You will need to alter the directory paths in the code to adjust for 
 file locations on your computer.
-
-
 
 To compile and run the code you will require 5 other libraries. 
 Details for installing and testing these are given below.

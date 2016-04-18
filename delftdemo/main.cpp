@@ -1,3 +1,16 @@
+// This code processes images from a flotation cell and extracts textures from
+// the image. These texture features are regressed onto a multivariate
+// (principal component analysis, PCA) model, to determine how close the
+// appearance of the image is to the "desirable" appearance.
+//
+// People that operate the flotation cells can therefore use this model to
+// adjust settings on the process, so that process moves to stable operation.
+// The outputs can (and have) been used for automatic control of appearance.
+//
+// All code (except for external libraries), have been written by Kevin Dunn
+// 14 to 18 April 2016, as demonstration for a job interview at TU Delft.
+
+
 #include <iostream>
 #include <string>
 #include <vector>
