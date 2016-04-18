@@ -319,7 +319,7 @@ MatrixRM ifft2_cImage_to_matrix(fftw_complex* inImg, double scale,
     if (model.display_results){
         // Write the image result to a JPG file, to visualize outside this
         // function. Using ``display_results=true`` will slow processing.
-        string fname = model.working_dir + "texture-" + to_string((int)scale) + ".jpg";
+        string fname = model.working_dir + "texture-" + to_string((int)scale) + ".bmp";
         cv::Mat outputI_cv(height, width, CV_8UC1);
         unsigned char* outputI_ptr = outputI_cv.ptr<unsigned char>(0);
         float subtractor = outputI.minCoeff();

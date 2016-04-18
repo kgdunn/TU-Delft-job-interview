@@ -13,6 +13,7 @@
 // 14 to 18 April 2016, as demonstration for a job interview at TU Delft.
 
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <vector>
 
@@ -21,6 +22,7 @@
 #include "bitmap_image.hpp"
 #include "Eigen/Core"
 #include <boost/filesystem.hpp>
+#include "opencv2/opencv.hpp"
 
 // Our libraries
 #include "flotation.h"
@@ -88,6 +90,33 @@ int main() {
             
             // Cleanup memory
             fftw_free(image_complex);
+            
+            if(model.display_results){
+                // Write the results to a CSV file. This will be displayed in MATLAB
+                std::ofstream computed_results;
+                computed_results.open ((directory+"features.csv").c_str());
+                computed_results << calc_outputs(0) << "," << calc_outputs(1)
+                                 << "," << calc_outputs(2) << ",	19" << endl;
+                computed_results.close();
+                
+                // Write the raw image result to a JPG file,.
+                string fname = model.working_dir + "raw-image.bmp";
+                int height = raw_image_nD.height();
+                int width = raw_image_nD.width();
+                cv::Mat outputI_cv(height, raw_image_nD.width(), CV_8UC3);
+                unsigned char* outputI_ptr = outputI_cv.ptr<unsigned char>(0);
+                unsigned char* start_ptr = raw_image_nD.start();
+                std::size_t idx = 0;
+                for (std::size_t i = 0; i < height; i++ ){
+                    for (std::size_t j  = 0; j < width; j++ ){
+                        outputI_ptr[i*width*3+j*3+0] = start_ptr[idx++];
+                        outputI_ptr[i*width*3+j*3+1] = start_ptr[idx++];
+                        outputI_ptr[i*width*3+j*3+2] = start_ptr[idx++];
+                    }
+                }
+                cv::imwrite(fname, outputI_cv);
+                
+            }
         }
         
     }// k=0; k<n_profiles; profiling loop
