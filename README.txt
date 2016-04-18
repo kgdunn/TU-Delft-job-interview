@@ -4,8 +4,9 @@ the image. These texture features are regressed onto a multivariate
 appearance of the image is to the "desirable" appearance.
 
 People that operate the flotation cells can therefore use this model to
-adjust settings on the process, so that process moves to stable operation.
-The outputs can (and have) been used for automatic control of appearance.
+adjust settings on the process, so that the process moves to a region of
+stable operation. The outputs can (and have) been used for automatic control
+of image appearance.
 
 All code (except for external libraries), have been written by Kevin Dunn
 14 to 18 April 2016, as demonstration for a job interview at TU Delft.
