@@ -12,7 +12,6 @@
 // All code (except for external libraries), have been written by Kevin Dunn
 // 14 to 18 April 2016, as demonstration for a job interview at TU Delft.
 
-
 #include <iostream>
 #include <string>
 #include <vector>
@@ -21,11 +20,7 @@
 #include <fftw3.h>
 #include "bitmap_image.hpp"
 #include "Eigen/Core"
-//#include "opencv2/core/persistence.hpp"
 #include <boost/filesystem.hpp>
-//#include <boost/circular_buffer.hpp>
-//#include <opencv2/highgui/highgui.hpp>
-//#include "GraphUtils.h"
 
 // Our libraries
 #include "flotation.h"
@@ -80,7 +75,7 @@ int main() {
             int index = 0;
             for (double scale=model.start_level; scale <= model.end_level;
                                                                     scale+=2){
-                wavelet_image = gauss_cwt(image_complex, scale, 1,
+                wavelet_image = gauss_cwt(image_complex, scale, model,
                                           image_1D.height(), image_1D.width());
                 restored = ifft2_cImage_to_matrix(wavelet_image, scale,
                                                   image_1D.height(),

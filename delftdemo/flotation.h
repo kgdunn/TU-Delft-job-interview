@@ -32,7 +32,7 @@ struct param{
     int n_features;         // Number of features used in the PCA projection
     VectorRM mean_vector;   // 1 x n_features vector
     VectorRM scaling_vector;// 1 x n_features vector
-    int n_components;
+    int n_components;       // Number of principal components
     MatrixRM loadings;      // n_features x n_components matrix
 };
 
@@ -69,7 +69,7 @@ Image colour2gray(Image inImg);
 fftw_complex* fft2_image(Image inImg);
 MatrixRM ifft2_cImage_to_matrix(fftw_complex* inImg, double scale,
                                 int height, int width, param model);
-fftw_complex* gauss_cwt(fftw_complex* inFFT, double scale, double sigma,
+fftw_complex* gauss_cwt(fftw_complex* inFFT, double scale, param model,
                         int height, int width);
 Eigen::VectorXf threshold(MatrixRM inImg, param model);
 Eigen::VectorXf project_onto_model(const Eigen::VectorXf& features, param model);

@@ -200,21 +200,6 @@ Image subsample_image(Image inImg){
     return output;
 };
 
-//cv::Mat BMP_to_CV(Image inImg, cv::Mat outImg){
-//    // Maps our bitmap image to an OpenCV Mat type.
-//    // So that they can be displayed, edited, manipulated, etc.
-//    
-//    if(inImg.layers() == 3){
-//        cv::Mat outImg = cv::Mat(3, {inImg.height(), inImg.width()}, CV_8UC3, cv::Scalar::all(0));
-//    }
-//    else{
-//        cout << "Images with only 3 layers (BGR) are currently supported." << endl;
-//        abort();
-//    }
-//    return
-//}
-
-
 Image colour2gray(Image inImg){
     // Convert a 3-channel BRG image to a grayscale image.
     int width = inImg.width();
@@ -231,8 +216,8 @@ Image colour2gray(Image inImg){
         double bmul = 0.114020;
         double gmul = 0.587043;
         double rmul = 0.298936;
-        std::size_t m_src = 0x00;
-        std::size_t m_dst = 0x00;
+        std::size_t m_src = 0;
+        std::size_t m_dst = 0;
         for (std::size_t j=0; j<height; j++){
             for (std::size_t i=0; i<width; i++){
                 outI[m_dst++] = inI[m_src+0]*bmul +
@@ -256,12 +241,11 @@ fftw_complex* fft2_image(Image inImg){
     
     // 1. Note that FFTW stores the image data in row major order
     double *inFFT = new double[inImg.height()*inImg.width()];
-    unsigned char * start_pixel = inImg.start();
-    std::size_t idx = 0x00;
+    unsigned char *start_pixel = inImg.start();
+    std::size_t idx = 0;
     for (std::size_t i = 0; i < inImg.height(); i++){ // rows
-        for (std::size_t    j = 0; j < inImg.width(); j++){ //col
+        for (std::size_t j = 0; j < inImg.width(); j++){ //cols
             inFFT[i*inImg.width()+j] = static_cast<double>(start_pixel[idx++]);
-            //cout << inFFT[i*inImg.width()+j] << endl;
         }
     }
     
@@ -340,6 +324,7 @@ MatrixRM ifft2_cImage_to_matrix(fftw_complex* inImg, double scale,
         unsigned char* outputI_ptr = outputI_cv.ptr<unsigned char>(0);
         float subtractor = outputI.minCoeff();
         float max = outputI.maxCoeff();
+        // This scales all pixels in the image between 0 (black) and 255 (white)
         float scaling_factor = 255.0 / (max - subtractor);
         for (std::size_t i = 0; i < height; i++ ){
             for (std::size_t j  = 0; j < width; j++ ){
@@ -347,15 +332,16 @@ MatrixRM ifft2_cImage_to_matrix(fftw_complex* inImg, double scale,
                                                         / scaling_factor;
             }
         }
+        // This image is colour mapped: each pixel between 0 and 255 is mapped
+        // to a different color through a lookup table.
         cv::Mat color_mapped_image;
         cv::applyColorMap(outputI_cv, color_mapped_image, cv::COLORMAP_JET);
         cv::imwrite(fname, color_mapped_image);
-        
     }
     return outputI;
 };
 
-fftw_complex* gauss_cwt(fftw_complex* inFFT, double scale, double sigma,
+fftw_complex* gauss_cwt(fftw_complex* inFFT, double scale, param model,
                 int height, int width){
     // Performs the Gaussian Continuous Wavelet Transformation, given the FFT2
     // transform of the image, ``inImg``. It does that at the required ``scale``,
@@ -390,7 +376,7 @@ fftw_complex* gauss_cwt(fftw_complex* inFFT, double scale, double sigma,
     std::size_t fft_size = sizeof(fftw_complex)* height * halfwidth;
     fftw_complex *outFFT = (fftw_complex*)fftw_malloc (fft_size);
 
-    double neg_sigma_sq = -0.5*pow(sigma, 2.0);
+    double neg_sigma_sq = -0.5*pow(model.sigma_xy, 2.0);
     double multiplier = 0.0;
     std::size_t idx = 0;
     for(std::size_t k=0; k < height; k++){
@@ -512,9 +498,10 @@ Eigen::VectorXf threshold(const MatrixRM inImg, param model){
     else
         output(1) = x2;
     
+    // MATLAB: = sum(sum(A >= ThrValue))
     output[0] = 0.0;
     for (std::size_t k=0; k < n_elements; k++)
-        output(0) += X[k] > output(1);    // MATLAB: = sum(sum(A >= ThrValue))
+        output(0) += static_cast<double>(X[k] > output(1));
     output(0) = output(0) / static_cast<double>(n_elements);
     return output;
 };
