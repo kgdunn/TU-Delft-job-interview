@@ -12,6 +12,8 @@ using namespace std;
 typedef Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> MatrixRM;
 typedef Eigen::Matrix<float, 1, Eigen::Dynamic> VectorRM;
 
+#include "opencv2/core/persistence.hpp"
+
 
 struct param{
     // A structure that holds the model parameters that are used to process

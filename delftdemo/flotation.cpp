@@ -13,7 +13,6 @@
 #include "opencv2/opencv.hpp"
 #include "opencv2/core/core_c.h"
 #include "opencv2/core/persistence.hpp"
-#include <opencv2/highgui/highgui.hpp>
 
 using namespace cv;
 
@@ -35,7 +34,7 @@ param load_model_parameters(std::string directory, std::string filename){
         fs << "sigma_xy" << 1.0;            // Gaussian coefficient
         fs << "percent_retained" << 0.85;   // percentage retained
         fs << "n_components" << 2;          // number of PCA components
-        fs << "display_results" << false;   // writes intermediate files to disk
+        fs << "display_results" << true;    // writes intermediate files to disk
                                             // so images can be viewed later
 
         cv::Mat mean_vector = (cv::Mat_<double>(1,6) << 0.026289407767760,

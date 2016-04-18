@@ -21,10 +21,11 @@
 #include <fftw3.h>
 #include "bitmap_image.hpp"
 #include "Eigen/Core"
-#include "opencv2/core/persistence.hpp"
+//#include "opencv2/core/persistence.hpp"
 #include <boost/filesystem.hpp>
-#include <boost/circular_buffer.hpp>
-#include <opencv2/highgui/highgui.hpp>
+//#include <boost/circular_buffer.hpp>
+//#include <opencv2/highgui/highgui.hpp>
+//#include "GraphUtils.h"
 
 // Our libraries
 #include "flotation.h"
@@ -34,7 +35,7 @@ using namespace boost::filesystem;
 
 int main() {
     
-    int n_profiles = 5;
+    int n_profiles = 1;
     auto begin = chrono::high_resolution_clock::now();
     vector<string> all_files;
     
@@ -61,11 +62,6 @@ int main() {
             cout << ex.what() << '\n';
         }
         
-        // We wish to keep the last 10 results in a buffer (to display)
-        int show_results = 10;
-        boost::circular_buffer<Eigen::VectorXf> buffer(show_results);
-        
-        
         //string filename = "/Users/kevindunn/Delft/DelftDemo/delftdemo/delftdemo/testing-image.bmp";
         for (auto filename : all_files){
             // Process each new flotation image in the pipeline below.
@@ -80,9 +76,10 @@ int main() {
             fftw_complex *wavelet_image;
             MatrixRM restored;
             Eigen::VectorXf f1f2;
-            Eigen::VectorXf features(7);
+            Eigen::VectorXf features(model.n_features+1);
             int index = 0;
-            for (double scale=1; scale <= 13; scale+=2){
+            for (double scale=model.start_level; scale <= model.end_level;
+                                                                    scale+=2){
                 wavelet_image = gauss_cwt(image_complex, scale, 1,
                                           image_1D.height(), image_1D.width());
                 restored = ifft2_cImage_to_matrix(wavelet_image, scale,
@@ -94,24 +91,8 @@ int main() {
             Eigen::VectorXf calc_outputs = project_onto_model(features, model);
             cout << calc_outputs.transpose() << endl;
             
-            // Store the results in a circular buffer for display:
-            buffer.push_back(calc_outputs);            
-            
-            if (model.display_results){
-                vector<cv::Mat> results(1);
-                cv::Mat raw_data = cv::imread((directory+filename).c_str());
-                results[0] = raw_data;
-                cv::Mat image_canvas_results = makeCanvas(results, 500, 2);
-                cv::namedWindow(filename, cv::WINDOW_AUTOSIZE);
-                cv::imshow(filename, raw_data);
-                cv::waitKey(0);
-                cv::destroyWindow(filename);
-            }
-            
             // Cleanup memory
             fftw_free(image_complex);
-         
-            
         }
         
     }// k=0; k<n_profiles; profiling loop
