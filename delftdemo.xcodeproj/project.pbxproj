@@ -28,6 +28,7 @@
 		6C78B5D21CC43DDF004EEAA5 /* testing-image.bmp */ = {isa = PBXFileReference; lastKnownFileType = image.bmp; path = "testing-image.bmp"; sourceTree = "<group>"; };
 		6CA582D61CC4251A003BD4D4 /* README.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.txt; sourceTree = "<group>"; };
 		6CD4DA2C1CC410320067D54D /* model-parameters.yml */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "model-parameters.yml"; sourceTree = "<group>"; };
+		6CDDD7CB1CD6148B00AA5225 /* flotation-process.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = "flotation-process.py"; sourceTree = "<group>"; };
 		6CE3F6051CC97F4F0021B3FA /* profiling.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = profiling.h; sourceTree = "<group>"; };
 		6CFE15A51CC1287200D2391D /* delftdemo */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = delftdemo; sourceTree = BUILT_PRODUCTS_DIR; };
 		6CFE15A81CC1287200D2391D /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
@@ -69,6 +70,7 @@
 			children = (
 				6CE3F6051CC97F4F0021B3FA /* profiling.h */,
 				6CFE15A81CC1287200D2391D /* main.cpp */,
+				6CDDD7CB1CD6148B00AA5225 /* flotation-process.py */,
 				6C78B5D21CC43DDF004EEAA5 /* testing-image.bmp */,
 				6CA582D61CC4251A003BD4D4 /* README.txt */,
 				6CFE15AF1CC129DD00D2391D /* flotation.h */,
