@@ -2,8 +2,6 @@ import os
 import numpy as np
 
 from PIL import Image as ImagePIL
-#j = Image.fromarray(b)
-#j.save('img2.png')
 
 class Image(object):
     """
@@ -41,13 +39,62 @@ def fft2_image(image_1D):
     raw_data = np.asarray(image_1D.img)
     return np.fft.fft2(raw_data)
 
-def gauss_cwt(image_complex, scale, image_height, image_width):
-    """ Calculates the Gauss CWT """
-    pass
+def gauss_cwt(inFFT, scale, height, width):
+    """ Performs the Gaussian Continuous Wavelet Transformation, given the FFT2
+    transform of the image, ``inImg``. It does that at the required ``scale``,
+    Some information about the size of the original image, ``height`` and
+    ``width`` is also required to set up the iFFT2 at the end.
+    """
+    # Create the height and width pulses. TODO: vectorize this
+    h_pulse = np.zeros(height)
+    multiplier_h = 2 * np.pi / height
+    split = np.floor(height/2)
+    for k in np.arange(0, split):
+        h_pulse[k] = np.power(scale * k * multiplier_h, 2)
+        h_pulse[k+split] = np.power(- scale * multiplier_h * (split-k), 2)
 
-def ifft2_cImage_to_matrix(wavelet_image, scale, image_height, image_width):
-    """ Inverse FFT2 """
-    pass
+
+    w_pulse = np.zeros(width)
+    multiplier_w = 2 * np.pi / width
+    split = width/2
+    for k in np.arange(0, split):
+        w_pulse[k] = np.power(scale * k * multiplier_w, 2)
+        w_pulse[k+split] = np.power(-scale * multiplier_w * (split-k), 2)
+
+
+    # Starting the computations for the Gaussian. Set up storage for the
+    # FFTW structure. Note (again) that the column dimension is half the
+    # image width, plus 1 column padding. So when we do the convolution below,
+    # we are doing it with the knowledge of the symmetry.
+    #halfwidth = (width / 2) + 1
+
+    neg_sigma_sq = -0.5*np.power(1, 2.0)
+    multiplier = 0.0
+    idx = 0
+    outFFT = np.zeros(inFFT.shape, dtype=np.complex128)
+    for k in np.arange(0, height):
+        for j in np.arange(0, width):
+            idx = k*width + j
+            multiplier = np.exp( neg_sigma_sq * (w_pulse[j] + h_pulse[k]) )
+            outFFT[k, j] = inFFT[k, j] * multiplier;
+
+
+    return outFFT
+
+
+
+def ifft2_cImage_to_matrix(in_image, scale, height, width):
+    """
+    Recreates an image from the complex inputs by using the inverse fast
+    Fourier transform.
+
+    You must also specify the recreated image dimensions: height (rows) and
+    width (columns).
+    """
+    n_elements = height * width;
+    outIm = np.fft.ifft2(in_image)
+    outIm = np.abs(outIm * scale / n_elements)
+    return Image(imgobj = ImagePIL.fromarray(outIm))
 
 def threshold(restored):
     """Thresholds the image"""

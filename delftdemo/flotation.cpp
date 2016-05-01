@@ -345,8 +345,7 @@ MatrixRM ifft2_cImage_to_matrix(fftw_complex* inImg, double scale,
 fftw_complex* gauss_cwt(fftw_complex* inFFT, double scale, param model,
                 int height, int width){
     // Performs the Gaussian Continuous Wavelet Transformation, given the FFT2
-    // transform of the image, ``inImg``. It does that at the required ``scale``,
-    // and at the model parameter ``sigma``.
+    // transform of the image, ``inFFT``. It does that at the required ``scale``.
     // Some information about the size of the original image, ``height`` and
     // ``width`` is also required to set up the iFFT2 at the end.
     
