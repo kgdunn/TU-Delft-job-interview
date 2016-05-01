@@ -91,4 +91,9 @@ int main( )
 5g. You will require these Linker flags, in addition to those from OpenCV:
 
 	-lboost_system -lboost_filesystem
+
+5h. Boost::Python
+
+	-lboost_python   <-- required in the Linker flags
 	
+	Header file path should be augmented with: /anaconda3/pkgs/python-3.5.1-0/include/python3.5m/

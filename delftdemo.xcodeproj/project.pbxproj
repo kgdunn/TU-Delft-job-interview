@@ -231,15 +231,15 @@
 		6CFE15AD1CC1287200D2391D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				HEADER_SEARCH_PATHS = /usr/local/include;
-				LIBRARY_SEARCH_PATHS = /usr/local/lib;
-				OTHER_LDFLAGS = (
-					"-lfftw3",
-					"-lm",
+				HEADER_SEARCH_PATHS = (
+					/usr/local/include,
+					"/anaconda3/pkgs/python-3.5.1-0/include/python3.5m",
 				);
-				"OTHER_LDFLAGS[arch=*]" = (
-					"-lfftw3",
-					"-lm",
+				LIBRARY_SEARCH_PATHS = (
+					/usr/local/lib,
+					"/anaconda3/pkgs/python-3.5.1-0/include/python3.5m/",
+				);
+				OTHER_LDFLAGS = (
 					"-lopencv_calib3d",
 					"-lopencv_core",
 					"-lopencv_features2d",
@@ -259,6 +259,9 @@
 					"-lopencv_videostab",
 					"-lboost_system",
 					"-lboost_filesystem",
+					"-lboost_python",
+					"-lfftw3",
+					"-lm",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -267,30 +270,41 @@
 		6CFE15AE1CC1287200D2391D /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				HEADER_SEARCH_PATHS = /usr/local/include;
-				LIBRARY_SEARCH_PATHS = /usr/local/lib;
+				HEADER_SEARCH_PATHS = (
+					/usr/local/include,
+					"/anaconda3/pkgs/python-3.5.1-0/include/python3.5m",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					/usr/local/lib,
+					"/anaconda3/pkgs/python-3.5.1-0/include/python3.5m/",
+				);
 				OTHER_LDFLAGS = (
-					"-lfftw3",
-					"-lm",
 					"-lopencv_calib3d",
 					"-lopencv_core",
 					"-lopencv_features2d",
 					"-lopencv_flann",
-					"-lopencv_highgui",
+					"-lopencv_highgui\n",
 					"-lopencv_imgcodecs",
 					"-lopencv_imgproc",
 					"-lopencv_ml",
 					"-lopencv_objdetect",
 					"-lopencv_photo",
+					"
+",
 					"-lopencv_shape",
 					"-lopencv_stitching",
 					"-lopencv_superres",
 					"-lopencv_ts",
 					"-lopencv_video",
+					"
+",
 					"-lopencv_videoio",
 					"-lopencv_videostab",
-					"-lboost_filesystem",
 					"-lboost_system",
+					"-lboost_filesystem",
+					"-lboost_python",
+					"-lfftw3",
+					"-lm",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};

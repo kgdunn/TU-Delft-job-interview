@@ -22,6 +22,7 @@
 #include "bitmap_image.hpp"
 #include "Eigen/Core"
 #include <boost/filesystem.hpp>
+//#include <boost/python.hpp>
 #include "opencv2/opencv.hpp"
 
 // Our libraries

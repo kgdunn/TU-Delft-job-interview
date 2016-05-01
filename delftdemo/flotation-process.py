@@ -1,7 +1,14 @@
-import os
-import numpy as np
+# pip install -U PIL
+# pip install -U numpy
+# or, just use Anaconda3, which has everything installed already
 
+import os
+from multiprocessing import Pool, Process
+import datetime
+import numpy as np
 from PIL import Image as ImagePIL
+
+start_dir = '/Users/kevindunn/Delft/DelftDemo/delftdemo/working-directory/'
 
 class Image(object):
     """
@@ -39,6 +46,7 @@ def fft2_image(image_1D):
     raw_data = np.asarray(image_1D.img)
     return np.fft.fft2(raw_data)
 
+#@profile
 def gauss_cwt(inFFT, scale, height, width):
     """ Performs the Gaussian Continuous Wavelet Transformation, given the FFT2
     transform of the image, ``inImg``. It does that at the required ``scale``,
@@ -53,7 +61,6 @@ def gauss_cwt(inFFT, scale, height, width):
         h_pulse[k] = np.power(scale * k * multiplier_h, 2)
         h_pulse[k+split] = np.power(- scale * multiplier_h * (split-k), 2)
 
-
     w_pulse = np.zeros(width)
     multiplier_w = 2 * np.pi / width
     split = width/2
@@ -61,26 +68,17 @@ def gauss_cwt(inFFT, scale, height, width):
         w_pulse[k] = np.power(scale * k * multiplier_w, 2)
         w_pulse[k+split] = np.power(-scale * multiplier_w * (split-k), 2)
 
-
-    # Starting the computations for the Gaussian. Set up storage for the
-    # FFTW structure. Note (again) that the column dimension is half the
-    # image width, plus 1 column padding. So when we do the convolution below,
-    # we are doing it with the knowledge of the symmetry.
-    #halfwidth = (width / 2) + 1
-
+    # Multiply with the incoming FFT image, and return the ``outFFT`` output
     neg_sigma_sq = -0.5*np.power(1, 2.0)
     multiplier = 0.0
-    idx = 0
     outFFT = np.zeros(inFFT.shape, dtype=np.complex128)
     for k in np.arange(0, height):
         for j in np.arange(0, width):
-            idx = k*width + j
             multiplier = np.exp( neg_sigma_sq * (w_pulse[j] + h_pulse[k]) )
             outFFT[k, j] = inFFT[k, j] * multiplier;
 
 
     return outFFT
-
 
 
 def ifft2_cImage_to_matrix(in_image, scale, height, width):
@@ -96,21 +94,27 @@ def ifft2_cImage_to_matrix(in_image, scale, height, width):
     outIm = np.abs(outIm * scale / n_elements)
     return Image(imgobj = ImagePIL.fromarray(outIm))
 
+
 def threshold(restored):
     """Thresholds the image"""
-    return [0, 0]
+
+    return [restored.img.getpixel((0,0)), 0]
+
 
 def project_onto_model(features):
     """ Projects the results on the PCA model."""
-    pass
+    return np.sum(features)
 
+
+#@profile
 def flotation_pipeline(filename):
     """A single function that processes the flotation image given in the
     filename.
 
     The image processing pipeline:
     """
-    raw_image = Image(filename)
+    print('Image: {0} with process id {1}'.format(filename, os.getpid()))
+    raw_image = Image(start_dir + filename)
     image_1D = raw_image.subsample().to_gray();
     image_complex = fft2_image(image_1D)
 
@@ -127,10 +131,38 @@ def flotation_pipeline(filename):
         features.append(f1f2[0])
 
     calc_outputs = project_onto_model(features)
+    return calc_outputs
+
 
 if __name__ == '__main__':
 
-    start_dir = '/Users/kevindunn/Delft/DelftDemo/delftdemo/working-directory/'
+    # Currently 1.29 seconds per image (no thresholding step yet)
+    #   * 98.2% of the time is in the GaussCWT function
+
+    # With the multiprocessing function: 0.412 seconds per image, or a speed
+    # up of around 3 times.
+
+
+    file_list = []
+
     for filename in os.listdir(path=start_dir):
         if filename.endswith('.bmp'):
-            flotation_pipeline(start_dir + filename)
+            file_list.append(filename)
+            #flotation_pipeline(filename)
+
+    print(datetime.datetime.now())
+
+    # Start as many workers as there are CPUs
+    pool = Pool()
+    result = pool.map(flotation_pipeline, file_list)
+    pool.close()
+    pool.join()
+    print(result)
+
+
+    print(datetime.datetime.now())
+
+
+
+
+#if __name__ == '__main__':
