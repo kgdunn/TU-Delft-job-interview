@@ -1,5 +1,5 @@
 This code processes images from a flotation cell and extracts textures from
-the image. These texture features are regressed onto a multivariate
+the image. These texture features are projected onto a multivariate
 (principal component analysis, PCA) model, to determine how close the
 appearance of the image is to the "desirable" appearance.
 
@@ -15,8 +15,7 @@ This demonstration code was written and tested in XCode 7.3.
 
 The code will be explained in detail on Tuesday, 19 April, but if you 
 would like to browse it, please go ahead. Note that (minor) changes will
-occur before Tuesday. Hopefully the addition of OpenCV display windows, 
-to visually illustrate what the code is doing.
+occur before Tuesday.
 
 A demonstration image has been added to the repository so you can try
 using the code. You will need to alter the directory paths in "main.cpp"

@@ -213,6 +213,7 @@ Image colour2gray(Image inImg){
     if (inImg.layers()==3){
         // This is a common weighted sum for colour -> gray, since the human
         // eye is more attuned to green colour (higher prevalence of green cones).
+        // Update: this is also known as the ITU-R 601-2 luma transform.
         double bmul = 0.114020;
         double gmul = 0.587043;
         double rmul = 0.298936;

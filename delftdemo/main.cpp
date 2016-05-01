@@ -26,6 +26,7 @@
 
 // Our libraries
 #include "flotation.h"
+#include "profiling.h"
 
 using namespace std;
 using namespace boost::filesystem;
@@ -34,13 +35,21 @@ int main() {
     
     int n_profiles = 1;
     auto begin = chrono::high_resolution_clock::now();
+    
     vector<string> all_files;
+    Profile profiler;
+    
+    //vector<chrono::milliseconds::rep> times;
+    
     
     for (int k=0; k < n_profiles; k++){
         // This outer loop is used for profiling the code and checking for
         // egregious memory leaks. None noticed when profiling for 1000's
         // of iterations.
+        
         cout << k << "\t";
+        
+        
         
         string directory = "/Users/kevindunn/Delft/DelftDemo/delftdemo/working-directory/";
         string parameters_file = "model-parameters.yml";
@@ -59,6 +68,8 @@ int main() {
             cout << ex.what() << '\n';
         }
         
+        profiler.start();
+        
         //string filename = "/Users/kevindunn/Delft/DelftDemo/delftdemo/delftdemo/testing-image.bmp";
         int img_index = 0;
         for (auto filename : all_files){
@@ -71,8 +82,18 @@ int main() {
             Image raw_image_nD  = read_image((directory+filename).c_str());
             Image image_nD_sub  = subsample_image(raw_image_nD);
             Image image_1D      = colour2gray(image_nD_sub);
+            
+            profiler.next("Read, subsample, togray");
+            
             fftw_complex *image_complex = fft2_image(image_1D);
+            
+            profiler.next("FFT2");
+            
             fftw_complex *wavelet_image;
+            
+            profiler.next("Wavelet calcs");
+            
+            
             MatrixRM restored;
             Eigen::VectorXf f1f2;
             Eigen::VectorXf features(model.n_features+1);
@@ -81,13 +102,19 @@ int main() {
                                                                     scale+=2){
                 wavelet_image = gauss_cwt(image_complex, scale, model,
                                           image_1D.height(), image_1D.width());
+                
                 restored = ifft2_cImage_to_matrix(wavelet_image, scale,
                                                   image_1D.height(),
                                                   image_1D.width(), model);
+                
+                profiler.next("iFFT");
                 f1f2 = threshold(restored, model);
                 features(index++) = f1f2[0];
+                profiler.next("Thresholded");
             }
             Eigen::VectorXf calc_outputs = project_onto_model(features, model);
+            
+            profiler.next("Loop of 7 + projection");
             
             // MATLAB: bubble_size = sqrt(sum(features)/sum(features./(1:6).^2))
             VectorRM bub_size_num, bub_size_den;
@@ -106,6 +133,8 @@ int main() {
             
             // Cleanup memory
             fftw_free(image_complex);
+            
+            profiler.next("Clean and bubble size");
             
             if(model.display_results){
                 // Write the results to a CSV file. This will be displayed in MATLAB
@@ -134,10 +163,28 @@ int main() {
                 cv::imwrite(fname, outputI_cv);
                 
             }
+           
+            profiler.loop_back("Writing out results");
+            
+//            auto end = chrono::high_resolution_clock::now();
+//            auto elapsedtime = chrono::duration_cast<chrono::milliseconds>(end - loop_start).count();;
+//            times.push_back(elapsedtime);
+            
         }
+        
         
     }// k=0; k<n_profiles; profiling loop
     
+//    std::sort(times.begin(), times.end());
+//    std::cout << "Median: " << times.at(times.size()/2) << "(ms)" << endl;
+//    
+//    VectorRM timings;
+//    timings.resize(1, times.size());
+//    for (int k=0; k<times.size(); k++){
+//        timings(k) = static_cast<double>(times[k]);
+//    }
+//    std::cout << "Average: " << timings.mean() << "(ms)" << endl;
+
     auto end = chrono::high_resolution_clock::now();
     cout << chrono::duration_cast<chrono::nanoseconds>(end-begin).count()
              /1000000.0/n_profiles/(all_files.size()) << "ms per image" << endl;
