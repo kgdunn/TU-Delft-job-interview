@@ -3,7 +3,7 @@
 # or, just use Anaconda3, which has everything installed already
 
 import os
-from multiprocessing import Pool, Process
+import multiprocessing
 import datetime
 import numpy as np
 from PIL import Image as ImagePIL
@@ -96,18 +96,18 @@ def ifft2_cImage_to_matrix(in_image, scale, height, width):
 
 
 def threshold(restored):
-    """Thresholds the image"""
+    """TODO: Thresholds the image"""
 
     return [restored.img.getpixel((0,0)), 0]
 
 
 def project_onto_model(features):
-    """ Projects the results on the PCA model."""
+    """ TODO: Projects the results on the PCA model."""
     return np.sum(features)
 
 
 #@profile
-def flotation_pipeline(filename):
+def flotation_image_processing(filename):
     """A single function that processes the flotation image given in the
     filename.
 
@@ -136,33 +136,24 @@ def flotation_pipeline(filename):
 
 if __name__ == '__main__':
 
-    # Currently 1.29 seconds per image (no thresholding step yet)
+    # Currently 1.28 seconds per image (no thresholding step yet)
     #   * 98.2% of the time is in the GaussCWT function
 
-    # With the multiprocessing function: 0.412 seconds per image, or a speed
-    # up of around 3 times.
-
-
     file_list = []
-
     for filename in os.listdir(path=start_dir):
         if filename.endswith('.bmp'):
             file_list.append(filename)
-            #flotation_pipeline(filename)
+
 
     print(datetime.datetime.now())
 
     # Start as many workers as there are CPUs
-    pool = Pool()
-    result = pool.map(flotation_pipeline, file_list)
-    pool.close()
-    pool.join()
-    print(result)
+    pool = multiprocessing.Pool(processes=16)
+    result = pool.map(flotation_image_processing, file_list)
+    pool.close() # No more tasks can be added to the pool
+    pool.join()  # Wrap up all current tasks and terminate
 
+    print(result)
 
     print(datetime.datetime.now())
 
-
-
-
-#if __name__ == '__main__':
