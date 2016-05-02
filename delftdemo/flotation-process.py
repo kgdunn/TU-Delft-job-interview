@@ -70,13 +70,9 @@ def gauss_cwt(inFFT, scale, height, width):
 
     # Multiply with the incoming FFT image, and return the ``outFFT`` output
     neg_sigma_sq = -0.5*np.power(1, 2.0)
-    multiplier = 0.0
-    outFFT = np.zeros(inFFT.shape, dtype=np.complex128)
-    for k in np.arange(0, height):
-        for j in np.arange(0, width):
-            multiplier = np.exp( neg_sigma_sq * (w_pulse[j] + h_pulse[k]) )
-            outFFT[k, j] = inFFT[k, j] * multiplier;
-
+    h_matrix, v_matrix = np.meshgrid(w_pulse, h_pulse)
+    multiplier_test = np.exp(neg_sigma_sq * (h_matrix + v_matrix))
+    outFFT = inFFT * multiplier_test
 
     return outFFT
 
@@ -143,12 +139,13 @@ if __name__ == '__main__':
     for filename in os.listdir(path=start_dir):
         if filename.endswith('.bmp'):
             file_list.append(filename)
-
+            #flotation_image_processing(filename)
+            #print(filename)
 
     print(datetime.datetime.now())
 
     # Start as many workers as there are CPUs
-    pool = multiprocessing.Pool(processes=16)
+    pool = multiprocessing.Pool(processes=4)
     result = pool.map(flotation_image_processing, file_list)
     pool.close() # No more tasks can be added to the pool
     pool.join()  # Wrap up all current tasks and terminate
