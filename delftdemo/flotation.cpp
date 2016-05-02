@@ -408,17 +408,17 @@ double norm_threshold(const float *X, long n_elements, int apply_thresh, double 
     double temp = 0.0;
     if (apply_thresh==1){
        for (std::size_t k=0; k < n_elements; k++)
-        temp += X[k]*X[k]*(X[k]>=thresh);
+           temp += X[k]*X[k]*(X[k]>=thresh);
     }
     else{
         for (std::size_t k=0; k < n_elements; k++)
-        temp += X[k]*X[k];
+            temp += X[k]*X[k];
     }
     return(temp);
 }
 
 Eigen::VectorXf threshold(const MatrixRM inImg, param model){
-    // Thresholds the wavelet coefficients based on retained energ. Calculates
+    // Thresholds the wavelet coefficients based on retained energy. Calculates
     // the percentage of pixels that exceeds this energy level.
     //
     // Returns: 2-element vector
@@ -431,18 +431,14 @@ Eigen::VectorXf threshold(const MatrixRM inImg, param model){
     long n_elements = inImg.rows() * inImg.cols();
     const float* X = inImg.data();
     float stdX = 0.0;
-    float sumX = 0.0;
-    float minX = X[0];
-    float maxX = 0.0;
-    float meanX = 0.0;
     
     // 2. We need some basic statistics about the image. It is no more efficient
     //    to calculate them outside the matrix library, than to calculate them
     //    manually. Rather use the library (cleaner code).
-    minX = inImg.minCoeff();
-    maxX = inImg.maxCoeff();
-    sumX = inImg.sum();
-    meanX = sumX / n_elements;
+    float minX = inImg.minCoeff();
+    float maxX = inImg.maxCoeff();
+    float sumX = inImg.sum();
+    float meanX = sumX / n_elements;
     for (std::size_t k=0; k < n_elements; k++){
         stdX += (X[k] - meanX) * (X[k] - meanX);
     }
@@ -500,6 +496,7 @@ Eigen::VectorXf threshold(const MatrixRM inImg, param model){
         output(1) = x2;
     
     // MATLAB: = sum(sum(A >= ThrValue))
+    // TODO: speed up possible here? All the element lookups: ``output(1)``
     output[0] = 0.0;
     for (std::size_t k=0; k < n_elements; k++)
         output(0) += static_cast<double>(X[k] > output(1));
