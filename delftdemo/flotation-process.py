@@ -8,6 +8,7 @@ import datetime
 import numpy as np
 from PIL import Image as ImagePIL
 
+
 start_dir = '/Users/kevindunn/Delft/DelftDemo/delftdemo/working-directory/'
 
 class Image(object):
@@ -46,30 +47,28 @@ def fft2_image(image_1D):
     raw_data = np.asarray(image_1D.img)
     return np.fft.fft2(raw_data)
 
-#@profile
+@profile
 def gauss_cwt(inFFT, scale, height, width):
     """ Performs the Gaussian Continuous Wavelet Transformation, given the FFT2
     transform of the image, ``inImg``. It does that at the required ``scale``,
     Some information about the size of the original image, ``height`` and
     ``width`` is also required to set up the iFFT2 at the end.
     """
-    # Create the height and width pulses. TODO: vectorize this
-    h_pulse = np.zeros(height)
+    # Create the height and width pulses.
     multiplier_h = 2 * np.pi / height
     split = np.floor(height/2)
-    for k in np.arange(0, split):
-        h_pulse[k] = np.power(scale * k * multiplier_h, 2)
-        h_pulse[k+split] = np.power(- scale * multiplier_h * (split-k), 2)
+    left = np.arange(0, split, step=1) * scale * multiplier_h
+    right = np.arange(-split, 0, step=1) * scale * multiplier_h
+    h_pulse = np.power(np.hstack((left, right)), 2)
 
-    w_pulse = np.zeros(width)
     multiplier_w = 2 * np.pi / width
     split = width/2
-    for k in np.arange(0, split):
-        w_pulse[k] = np.power(scale * k * multiplier_w, 2)
-        w_pulse[k+split] = np.power(-scale * multiplier_w * (split-k), 2)
+    left = np.arange(0, split, step=1) * scale * multiplier_w
+    right = np.arange(-split, 0, step=1) * scale * multiplier_w
+    w_pulse = np.power(np.hstack((left, right)), 2)
 
     # Multiply with the incoming FFT image, and return the ``outFFT`` output
-    neg_sigma_sq = -0.5*np.power(1, 2.0)
+    neg_sigma_sq = -0.5 * np.power(1, 2.0)
     h_matrix, v_matrix = np.meshgrid(w_pulse, h_pulse)
     multiplier_test = np.exp(neg_sigma_sq * (h_matrix + v_matrix))
     outFFT = inFFT * multiplier_test
@@ -139,18 +138,18 @@ if __name__ == '__main__':
     for filename in os.listdir(path=start_dir):
         if filename.endswith('.bmp'):
             file_list.append(filename)
-            #flotation_image_processing(filename)
-            #print(filename)
+            flotation_image_processing(filename)
+            print(filename)
 
-    print(datetime.datetime.now())
+    #print(datetime.datetime.now())
 
-    # Start as many workers as there are CPUs
-    pool = multiprocessing.Pool(processes=4)
-    result = pool.map(flotation_image_processing, file_list)
-    pool.close() # No more tasks can be added to the pool
-    pool.join()  # Wrap up all current tasks and terminate
+    ## Start as many workers as there are CPUs
+    #pool = multiprocessing.Pool(processes=4)
+    #result = pool.map(flotation_image_processing, file_list)
+    #pool.close() # No more tasks can be added to the pool
+    #pool.join()  # Wrap up all current tasks and terminate
 
-    print(result)
+    #print(result)
 
-    print(datetime.datetime.now())
+    #print(datetime.datetime.now())
 
