@@ -53,9 +53,13 @@ int main() {
         
         
         string directory = "/Users/kevindunn/Delft/DelftDemo/delftdemo/working-directory/";
+        
         string parameters_file = "model-parameters.yml";
         param model = load_model_parameters(directory, parameters_file);
+        
+        directory = "/Users/kevindunn/Delft/DelftDemo/delftdemo/delftdemo/";
         model.working_dir = directory;
+        
         string filename_extenion_filter = ".bmp";        
         try{
             if (exists(directory) && is_directory(directory)){

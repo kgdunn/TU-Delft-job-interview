@@ -8,8 +8,38 @@ import datetime
 import numpy as np
 from PIL import Image as ImagePIL
 
-
 start_dir = '/Users/kevindunn/Delft/DelftDemo/delftdemo/working-directory/'
+#start_dir = '/Users/kevindunn/Delft/DelftDemo/delftdemo/delftdemo/'
+
+class Param(object):
+    """
+    A structure that holds the model parameters that are used to process
+    each image. The structure is considered "read-only", i.e. no results
+    are stored in it.
+    """
+    def __init__(self):
+        self.subsample_image = True
+        self.start_level = 1         # start and ends levels for the
+        self.end_level = 13          # wavelet resolution
+        self.sigma_xy = 1.0          # Gaussian coefficient
+        self.percent_retained = 0.85 # percentage energy retained
+        self.tolerance = 0.000001    # thresholding tolerance for convergence
+        self.n_components = 2        # number of PCA components
+        self.display_results = False # writes intermediate files to disk
+                                     # so images can be viewed later
+
+        self.mean_vector = np.array([0.026289407767760, 0.016596246522800,
+                                     0.010541172410390, 0.007098798177090,
+                                     0.005045800751860, 0.003766555672320])
+        self.scaling_vector = np.array([0.007311898849230, 0.002373383101510,
+                                        0.002344658601980, 0.002067958707430,
+                                        0.001679164709720, 0.001339596033420])
+        # Each component stored in a row, with ``n_features`` per row: 2x6
+        self.loadings = np.array([[-0.3731, 0.2012, 0.4418,
+                                                     0.4612, 0.4583, 0.4499],
+                                  [-0.5057, -0.8117, -0.2479,
+                                                    -0.0237, 0.0789, 0.1310]]);
+
 
 class Image(object):
     """
@@ -76,7 +106,7 @@ def gauss_cwt(inFFT, scale, height, width):
     return outFFT
 
 
-def ifft2_cImage_to_matrix(in_image, scale, height, width):
+def ifft2_cImage_to_matrix(in_image, scale):
     """
     Recreates an image from the complex inputs by using the inverse fast
     Fourier transform.
@@ -84,33 +114,30 @@ def ifft2_cImage_to_matrix(in_image, scale, height, width):
     You must also specify the recreated image dimensions: height (rows) and
     width (columns).
     """
-    n_elements = height * width;
     outIm = np.fft.ifft2(in_image)
-    outIm = np.abs(outIm * scale / n_elements)
+    outIm = np.abs(outIm * scale)
     return Image(imgobj = ImagePIL.fromarray(outIm))
 
 
 def norm_threshold(X, apply_thresh=True, thresh=0.0):
+    """
+    Calculates the sum-of-squares of the elements. Or, if ``apply_thresh``
+    ``thresh`` are provided, it will only do this on elements in X (not X^2)
+    that exceed that given ``thresh`` value.
 
-    # Using the ``n_elements`` in contiguous matrix (or vector) ``X``, it
-    # calculates the sum-of-squares of the elements. Or, if ``apply_thresh``
-    # ``thresh`` are provided, it will only do this on elements in X (not X^2)
-    # that exceed that given ``thresh`` value.
-    #
-    # MATLAB: normvalue = sum(sum( ((A>=thresh).*A).^2 ));  % for matrix A
-
+    MATLAB: normvalue = sum(sum( ((A>=thresh).*A).^2 ));  % for matrix A
+    """
     out = 0
     if apply_thresh:
-        return ((X>=thresh)*(X * X)).sum()
+        return ((X ** 2) * (X>=thresh)).sum()
     else:
         return (X * X).sum()
 
     return out
 
-
-def threshold(inImg):
-    """TODO: Thresholds the image
-
+#@profile
+def threshold(inImg, model):
+    """
     Thresholds the wavelet coefficients based on retained energy. Calculates
     the percentage of pixels that exceeds this energy level.
     Returns: 2-element vector
@@ -118,7 +145,7 @@ def threshold(inImg):
        2/ The threshold value computed to retain an energy level.
     """
     # 1. Initialize parameters required to determine the thresholding value
-    per_retained = 0.85
+    per_retained = model.percent_retained
     X = np.asarray(inImg.img)
 
     # 2. We need some basic statistics about the image.
@@ -133,10 +160,8 @@ def threshold(inImg):
 
     # 3. Set up search algorithm to find energy level. Uses the Golden section
     #    search routine (https://en.wikipedia.org/wiki/Golden_section_search)
-
     R = (np.sqrt(5)-1)/2  # Golden ratio: 0.61803399
     C = 1 - R
-
     x0 = minX
     x3 = maxX
     x1 = x0 + C*(x3-x0)
@@ -150,8 +175,7 @@ def threshold(inImg):
     #    use around 30 to 38 iterations.
     n_iter = 0;
     max_iterations = 100;
-    tolerance = 0.000001;
-    while ((np.abs(x3-x0)/stdX > tolerance) and (n_iter < max_iterations)):
+    while ((np.abs(x3-x0)/stdX > model.tolerance) and (n_iter < max_iterations)):
         n_iter += 1
         if (f2 < f1):
             x0 = x1
@@ -181,16 +205,46 @@ def threshold(inImg):
         output1 = x2
 
     # MATLAB: = sum(sum(A >= ThrValue))
-    output0 = ((X > output1) * X).sum() / X.size
+    # The percentage of the pixels that exceed the energy level
+    output0 = (X > output1).sum() / X.size
     return (output0, output1)
 
 
-def project_onto_model(features):
-    """ TODO: Projects the results on the PCA model."""
-    return np.sum(features)
+def project_onto_model(features, model):
+    """
+
+    Projects (applies) the calculated features from the image onto a pre-
+    existing PCA model. That PCA model was built from the features extracted
+    on the training image data.
+
+    In other words, this function is seeing how similar/dissimilar the
+    current image is in comparison with the training data.
 
 
-#@profile
+    First difference the features. (That explains why we count features
+    starting at -1 in ``param load_model_parameters(...)``.
+    """
+
+    n_features = len(features)
+    pca_features  = np.zeros((1, n_features))
+    mcuv_features = np.zeros((1, n_features))
+
+    # Then mean center and unit-variance (mcuv) scale after calculating
+    # the features.
+    pca_features = np.diff(features)
+    mcuv_features = (pca_features - model.mean_vector) / model.scaling_vector
+
+    # Calculate the PCA model outputs: the scores, and the SPE vector
+    pca_scores = np.dot(mcuv_features,  model.loadings.T)
+    spe_vector = np.dot(pca_scores, model.loadings)
+    spe_value = norm_threshold(spe_vector, False)
+
+    # Place the PCA scores and the SPE value in the return vector.
+    # And we are finished!
+    return (pca_scores.tolist(), spe_value)
+
+
+
 def flotation_image_processing(filename):
     """A single function that processes the flotation image given in the
     filename.
@@ -198,23 +252,24 @@ def flotation_image_processing(filename):
     The image processing pipeline:
     """
     print('Image: {0} with process id {1}'.format(filename, os.getpid()))
+
+    model = Param()
     raw_image = Image(start_dir + filename)
     image_1D = raw_image.subsample().to_gray();
     image_complex = fft2_image(image_1D)
 
     features = []
-    for scale in np.arange(1, 13, 2):
+    for scale in np.linspace(model.start_level, model.end_level,
+                             (model.end_level-model.start_level)/2+1):
         wavelet_image = gauss_cwt(image_complex, scale,
-                                    image_1D.rows, image_1D.cols)
+                                  image_1D.rows, image_1D.cols)
 
-        restored = ifft2_cImage_to_matrix(wavelet_image, scale,
-                                          image_1D.rows,
-                                          image_1D.cols)
+        restored = ifft2_cImage_to_matrix(wavelet_image, scale)
 
-        f1f2 = threshold(restored)
+        f1f2 = threshold(restored, model)
         features.append(f1f2[0])
 
-    calc_outputs = project_onto_model(features)
+    calc_outputs = project_onto_model(features, model)
     return calc_outputs
 
 
@@ -223,23 +278,25 @@ if __name__ == '__main__':
     # Currently 1.28 seconds per image (no thresholding step yet)
     #   * 98.2% of the time is in the GaussCWT function
 
-    # Now down to 0.4seconds per images with Numpy vectorization.
+    # Now down to 0.4 seconds per images with Numpy vectorization.
 
     print(datetime.datetime.now())
     file_list = []
     for filename in os.listdir(path=start_dir):
         if filename.endswith('.bmp'):
             file_list.append(filename)
-            #flotation_image_processing(filename)
-            print(filename)
+            #print(flotation_image_processing(filename))
+            #print(filename)
+
+
 
     print(datetime.datetime.now())
 
     # Start as many workers as there are CPUs
-    pool = multiprocessing.Pool(processes=4)
+    pool = multiprocessing.Pool(processes=1)
     result = pool.map(flotation_image_processing, file_list)
-    pool.close() # No more tasks can be added to the pool
-    pool.join()  # Wrap up all current tasks and terminate
+    pool.close()    # No more tasks can be added to the pool
+    pool.join()     # Wrap up all current tasks and terminate
 
     print(result)
 

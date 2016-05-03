@@ -22,7 +22,7 @@ using namespace cv;
 
 param load_model_parameters(std::string directory, std::string filename){
     // Loads the model parameters from an XML file. The commented code here will
-    // create a basic barebones XML file for you that you can tweak by hand,
+    // create a basic barebones YAML file for you that you can tweak by hand,
     // or, of course, uncomment the code to let the software do it for you.
     //
     if(true){
@@ -33,7 +33,7 @@ param load_model_parameters(std::string directory, std::string filename){
         fs << "start_level" << 1;           // start and ends levels for the
         fs << "end_level" << 13;            // wavelet resolution
         fs << "sigma_xy" << 1.0;            // Gaussian coefficient
-        fs << "percent_retained" << 0.85;   // percentage retained
+        fs << "percent_retained" << 0.85;   // percentage energy retained
         fs << "n_components" << 2;          // number of PCA components
         fs << "display_results" << true;    // writes intermediate files to disk
                                             // so images can be viewed later
@@ -501,6 +501,7 @@ Eigen::VectorXf threshold(const MatrixRM inImg, param model){
     for (std::size_t k=0; k < n_elements; k++)
         output(0) += static_cast<double>(X[k] > output(1));
     output(0) = output(0) / static_cast<double>(n_elements);
+    cout << output << endl;
     return output;
 };
 
@@ -524,6 +525,7 @@ Eigen::VectorXf project_onto_model(const Eigen::VectorXf& features, param model)
     // Then mean center and unit-variance (mcuv) scale after calculating
     // the features.
     for (int k=0; k < model.n_features; k++){
+        cout << features(k) << endl;
         pca_features(k) = features(k+1) - features(k);
         mcuv_features(k) = (pca_features(k) - model.mean_vector(k)) /
                                                      model.scaling_vector(k);
@@ -545,65 +547,3 @@ Eigen::VectorXf project_onto_model(const Eigen::VectorXf& features, param model)
     output(model.n_components) = static_cast<float>(spe_value);
     return output;
 };
-
-
-// Code to display the image results in an OpenCV window
-// Code is directly from:
-// http://stackoverflow.com/questions/5089927/show-multiple-2-3-4-images-in-the-same-window-in-opencv
-/**
- * @brief makeCanvas Makes composite image from the given images
- * @param vecMat Vector of Images.
- * @param windowHeight The height of the new composite image to be formed.
- * @param nRows Number of rows of images. (Number of columns will be calculated
- *              depending on the value of total number of images).
- * @return new composite image.
- */
-cv::Mat makeCanvas(std::vector<cv::Mat>& vecMat, int windowHeight, int nRows) {
-    int N = static_cast<int>(vecMat.size());
-    nRows  = nRows > N ? N : nRows;
-    int edgeThickness = 10;
-    int imagesPerRow = ceil(double(N) / nRows);
-    int resizeHeight = floor(2.0 * ((floor(double(windowHeight - edgeThickness) / nRows)) / 2.0)) - edgeThickness;
-    int maxRowLength = 0;
-    
-    std::vector<int> resizeWidth;
-    for (int i = 0; i < N;) {
-        int thisRowLen = 0;
-        for (int k = 0; k < imagesPerRow; k++) {
-            double aspectRatio = double(vecMat[i].cols) / vecMat[i].rows;
-            int temp = int( ceil(resizeHeight * aspectRatio));
-            resizeWidth.push_back(temp);
-            thisRowLen += temp;
-            if (++i == N) break;
-        }
-        if ((thisRowLen + edgeThickness * (imagesPerRow + 1)) > maxRowLength) {
-            maxRowLength = thisRowLen + edgeThickness * (imagesPerRow + 1);
-        }
-    }
-    int windowWidth = maxRowLength;
-    cv::Mat canvasImage(windowHeight, windowWidth, CV_8UC3, cv::Scalar(0, 0, 0));
-    
-    for (int k = 0, i = 0; i < nRows; i++) {
-        int y = i * resizeHeight + (i + 1) * edgeThickness;
-        int x_end = edgeThickness;
-        for (int j = 0; j < imagesPerRow && k < N; k++, j++) {
-            int x = x_end;
-            cv::Rect roi(x, y, resizeWidth[k], resizeHeight);
-            cv::Size s = canvasImage(roi).size();
-            // change the number of channels to three
-            cv::Mat target_ROI(s, CV_8UC3);
-            if (vecMat[k].channels() != canvasImage.channels()) {
-                if (vecMat[k].channels() == 1) {
-                    cv::cvtColor(vecMat[k], target_ROI, CV_GRAY2BGR);
-                }
-            }
-            cv::resize(target_ROI, target_ROI, s);
-            if (target_ROI.type() != canvasImage.type()) {
-                target_ROI.convertTo(target_ROI, canvasImage.type());
-            }
-            target_ROI.copyTo(canvasImage(roi));
-            x_end += resizeWidth[k] + edgeThickness;
-        }
-    }
-    return canvasImage;
-}
