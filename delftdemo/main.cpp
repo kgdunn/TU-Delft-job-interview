@@ -22,7 +22,6 @@
 #include "bitmap_image.hpp"
 #include "Eigen/Core"
 #include <boost/filesystem.hpp>
-//  #include <boost/python.hpp>
 #include "opencv2/opencv.hpp"
 
 // Our libraries
@@ -40,9 +39,6 @@ int main() {
     vector<string> all_files;
     Profile profiler;
     
-    //vector<chrono::milliseconds::rep> times;
-    
-    
     for (int k=0; k < n_profiles; k++){
         // This outer loop is used for profiling the code and checking for
         // egregious memory leaks. None noticed when profiling for 1000's
@@ -50,14 +46,10 @@ int main() {
         
         cout << k << "\t";
         
-        
-        
         string directory = "/Users/kevindunn/Delft/DelftDemo/delftdemo/working-directory/";
         
         string parameters_file = "model-parameters.yml";
         param model = load_model_parameters(directory, parameters_file);
-        
-        directory = "/Users/kevindunn/Delft/DelftDemo/delftdemo/delftdemo/";
         model.working_dir = directory;
         
         string filename_extenion_filter = ".bmp";        
@@ -87,17 +79,13 @@ int main() {
             Image raw_image_nD  = read_image((directory+filename).c_str());
             Image image_nD_sub  = subsample_image(raw_image_nD);
             Image image_1D      = colour2gray(image_nD_sub);
-            
-            profiler.next("Read, subsample, togray");
+            //profiler.next("Read, subsample, togray");
             
             fftw_complex *image_complex = fft2_image(image_1D);
-            
-            profiler.next("FFT2");
+            //profiler.next("FFT2");
             
             fftw_complex *wavelet_image;
-            
-            profiler.next("Wavelet calcs");
-            
+            //profiler.next("Wavelet calcs");
             
             MatrixRM restored;
             Eigen::VectorXf f1f2;
@@ -111,15 +99,14 @@ int main() {
                 restored = ifft2_cImage_to_matrix(wavelet_image, scale,
                                                   image_1D.height(),
                                                   image_1D.width(), model);
-                
-                profiler.next("iFFT");
+                //profiler.next("iFFT");
+
                 f1f2 = threshold(restored, model);
                 features(index++) = f1f2[0];
-                profiler.next("Thresholded");
+                //profiler.next("Thresholded");
             }
             Eigen::VectorXf calc_outputs = project_onto_model(features, model);
-            
-            profiler.next("Loop of 7 + projection");
+            //profiler.next("Loop of 7 + projection");
             
             // MATLAB: bubble_size = sqrt(sum(features)/sum(features./(1:6).^2))
             VectorRM bub_size_num, bub_size_den;
@@ -138,8 +125,7 @@ int main() {
             
             // Cleanup memory
             fftw_free(image_complex);
-            
-            profiler.next("Clean and bubble size");
+            //profiler.next("Clean and bubble size");
             
             if(model.display_results){
                 // Write the results to a CSV file. This will be displayed in MATLAB
@@ -168,12 +154,7 @@ int main() {
                 cv::imwrite(fname, outputI_cv);
                 
             }
-           
-            profiler.loop_back("Writing out results");
-            
-//            auto end = chrono::high_resolution_clock::now();
-//            auto elapsedtime = chrono::duration_cast<chrono::milliseconds>(end - loop_start).count();;
-//            times.push_back(elapsedtime);
+            //profiler.loop_back("Writing out results");
             
         }
         

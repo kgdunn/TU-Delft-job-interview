@@ -35,7 +35,7 @@ param load_model_parameters(std::string directory, std::string filename){
         fs << "sigma_xy" << 1.0;            // Gaussian coefficient
         fs << "percent_retained" << 0.85;   // percentage energy retained
         fs << "n_components" << 2;          // number of PCA components
-        fs << "display_results" << true;    // writes intermediate files to disk
+        fs << "display_results" << false;   // writes intermediate files to disk
                                             // so images can be viewed later
 
         cv::Mat mean_vector = (cv::Mat_<double>(1,6) << 0.026289407767760,
@@ -495,13 +495,13 @@ Eigen::VectorXf threshold(const MatrixRM inImg, param model){
     else
         output(1) = x2;
     
-    // MATLAB: = sum(sum(A >= ThrValue))
-    // TODO: speed up possible here? All the element lookups: ``output(1)``
-    output[0] = 0.0;
+    // MATLAB: = sum(sum(A >= ThrValue)
+    // Finds the percentage of the pixels that exceed the energy level
+    int counter = 0;
+    double boundary = output(1);
     for (std::size_t k=0; k < n_elements; k++)
-        output(0) += static_cast<double>(X[k] > output(1));
-    output(0) = output(0) / static_cast<double>(n_elements);
-    cout << output << endl;
+        counter += X[k] > boundary;
+    output(0) = counter / static_cast<double>(n_elements);
     return output;
 };
 
@@ -525,7 +525,6 @@ Eigen::VectorXf project_onto_model(const Eigen::VectorXf& features, param model)
     // Then mean center and unit-variance (mcuv) scale after calculating
     // the features.
     for (int k=0; k < model.n_features; k++){
-        cout << features(k) << endl;
         pca_features(k) = features(k+1) - features(k);
         mcuv_features(k) = (pca_features(k) - model.mean_vector(k)) /
                                                      model.scaling_vector(k);

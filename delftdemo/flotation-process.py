@@ -7,6 +7,7 @@ import multiprocessing
 import datetime
 import numpy as np
 from PIL import Image as ImagePIL
+import timeit
 
 start_dir = '/Users/kevindunn/Delft/DelftDemo/delftdemo/working-directory/'
 #start_dir = '/Users/kevindunn/Delft/DelftDemo/delftdemo/delftdemo/'
@@ -105,7 +106,7 @@ def gauss_cwt(inFFT, scale, height, width):
 
     return outFFT
 
-
+#@profile
 def ifft2_cImage_to_matrix(in_image, scale):
     """
     Recreates an image from the complex inputs by using the inverse fast
@@ -244,7 +245,7 @@ def project_onto_model(features, model):
     return (pca_scores.tolist(), spe_value)
 
 
-
+#@profile
 def flotation_image_processing(filename):
     """A single function that processes the flotation image given in the
     filename.
@@ -275,30 +276,50 @@ def flotation_image_processing(filename):
 
 if __name__ == '__main__':
 
-    # Currently 1.28 seconds per image (no thresholding step yet)
-    #   * 98.2% of the time is in the GaussCWT function
+    # Timing: takes about 62.4 ms to process an image with C++
 
-    # Now down to 0.4 seconds per images with Numpy vectorization.
+    # Python: 1Proc: 112  ms per image (averaged over 935 images)
+    #         2Proc: 62.6 ms per image (averaged over 935 images)
+    #         3Proc: 48.6 ms per image (averaged over 935 images)
+    #         4Proc: 43.6 ms per image (averaged over 935 images)
+    #         5Proc: 41.5 ms per image (averaged over 935 images)
+    #         6Proc: 51.7 ms per image (averaged over 935 images)
+    #         7Proc: 54.0 ms per image (averaged over 935 images)
+    #         8Proc: 54.8 ms per image (averaged over 935 images)
+    #
+    # which highlights the diminishing, and even negative returns on a
+    # 4 cores. Spawning extra threads leads to overhead that has to be
+    # managed.
 
-    print(datetime.datetime.now())
     file_list = []
     for filename in os.listdir(path=start_dir):
         if filename.endswith('.bmp'):
             file_list.append(filename)
-            #print(flotation_image_processing(filename))
-            #print(filename)
+
+            # To use ``kernprof``, uncomment this line and run from the
+            # command line:  kernprof -l -v flotation-process.py
+            # Also uncomment the function decorators ``@profile`` at locations
+            # where you want to find the hotspots.
+            # flotation_image_processing(filename)
 
 
-
-    print(datetime.datetime.now())
+    # Multiprocessing code:
+    start = datetime.datetime.now()
+    print(start)
 
     # Start as many workers as there are CPUs
-    pool = multiprocessing.Pool(processes=1)
+    pool = multiprocessing.Pool(processes=4)
     result = pool.map(flotation_image_processing, file_list)
     pool.close()    # No more tasks can be added to the pool
     pool.join()     # Wrap up all current tasks and terminate
 
-    print(result)
+    #print(result)
 
-    print(datetime.datetime.now())
+    endtime = datetime.datetime.now()
+    duration = endtime - start
+    print(endtime)
+    total_time_ms = duration.microseconds/1000 + duration.seconds*1000
+    print('Used {0} milliseconds; {1} milliseconds per image'.format(
+                                                total_time_ms,
+                                                total_time_ms/len(file_list)))
 
